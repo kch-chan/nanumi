@@ -1,0 +1,62 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### 로그 파일 ###
+*.log
+logs/
+
+### H2 DB 파일
+*.db
+*.mv.db
+*.trace.db
+
+### Private Key ###
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.crt
+
+### 키 보관 폴더 ###
+**/keys/private*.pem
+**/keys/public*.pem
+
+### secret/환경변수 파일 ###
+.env
+.env.*
+!.env.example
+*.secret.yml
+application-secret.yml
+application-local.yml
