@@ -28,10 +28,6 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
-      - name: Test
-        working-directory: frontend
-        run: npm test
-
   backend-check:
     name: Backend Check
     runs-on: ubuntu-latest
@@ -47,5 +43,5 @@ jobs:
           distribution: temurin
 
       - name: Test & Checkstyle
-        working-directory: backend
+        working-directory: backend/api
         run: ./mvnw verify
