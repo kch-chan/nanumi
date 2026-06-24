@@ -43,5 +43,5 @@ jobs:
           distribution: temurin
 
       - name: Test & Checkstyle
-        working-directory: backend/api/
+        working-directory: backend\api
         run: ./mvnw verify
