@@ -1,5 +1,5 @@
 ---
-name: 🐛 Bug Fix
+name: 🐛 Fix
 about: 버그 수정
 title: "[Fix] "
 labels: 🐛 fix
@@ -7,7 +7,7 @@ assignees: ""
 ---
 
 ## Summary
-<!-- 발생한 버그의 요약 설명 -->
+<!-- 발생한 버그 요약 설명 -->
 
 
 ## Changes
@@ -25,7 +25,8 @@ assignees: ""
 <!-- 수정 후 테스트 방법 및 확인 내용 -->
 
 - [ ] 버그 재현 확인
-- [ ] 수정 후 정상 동작 확인
+- [ ] 테스트 코드 작동 확인
+- [ ] 수정 후 정상 작동 확인
 
 
 ## Checklist
