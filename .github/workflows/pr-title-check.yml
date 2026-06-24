@@ -19,5 +19,6 @@ jobs:
             refactor
             docs
             style
-            pref
+            perf
             deploy
+          github-token: ${{ secrets.GITHUB_TOKEN }}
