@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 Discussion
+    url: https://github.com/kch-chan/nanumi/discussions
+    about: 질문이나 논의가 필요한 경우 사용해주세요.
