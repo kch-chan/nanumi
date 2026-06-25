@@ -1,11 +1,11 @@
 # Project Name
-
 **nanumi**
 
 같은 아파트(맨션) 내에서만 무료 나눔을 도와주는 서비스
 
 
 ## Project Overview
+노션 참고: https://orange-molecule-36d.notion.site/
 
 **프로젝트 목적**
 - 설계 단계부터 시작해서 제조・구현 단계까지의 연습
