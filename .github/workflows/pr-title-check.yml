@@ -4,8 +4,12 @@ on:
   pull_request_target:
     types: [opened, edited, synchronize]
 
+permissions:
+  pull-requests: write
+
 jobs:
-  title:
+  main:
+    name: Validate PR title
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
