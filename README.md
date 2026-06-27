@@ -1,7 +1,7 @@
 # Project Name
 **nanumi**
 
-같은 아파트(맨션) 내에서만 무료 나눔을 도와주는 서비스
+같은 아파트(맨션) 내의 무료 나눔을 도와주는 서비스
 
 
 ## Project Overview
@@ -18,14 +18,18 @@
 ## Getting Started
 
 **실행 방법**
-- 실제 서비스 테스트: `추후 업로드할 URL 참고`
-- 코드 테스트: 터미널 2개 이상 준비
+- 서비스 링크 접속하고 싶은 경우
+실제 서비스 URL: `추후 URL 참고`
+
+- 코드 실행하고 싶은 경우
+1. 프로젝트 다운로드 후 터미널 2개 이상 준비
+2. 각각의 터미널에 backend 실행 코드와 frontend 실행 코드 입력
 
 **backend 실행 코드**
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 cd backend/api
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 **frontend 실행 코드**
