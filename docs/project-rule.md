@@ -96,7 +96,7 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLButtonElement>) => {
   console.log(e);
 };
 ```
-- 그 외 컨벤션은 되도록 에어비앤비 자바스크립트 스타일 가이드(https://github.com/airbnb/javascript)를 따름
+- 그 외 컨벤션은 eslint와 prettier를 따름
 
 ### Backend
 - Checkstyle (google) 플러그인으로 기본 검사
