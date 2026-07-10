@@ -31,7 +31,7 @@ const SIZE_STYLES: Record<ButtonSize, string> = {
   lg: 'h-12 px-6 text-base gap-2',
 };
 
-export function Button({
+function Button({
   ref,
   variant = 'primary',
   size = 'md',
@@ -62,11 +62,7 @@ export function Button({
     >
       {isLoading ? (
         <>
-          <svg
-            className="h-4 w-4 animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
               cx="12"
@@ -93,3 +89,5 @@ export function Button({
     </button>
   );
 }
+
+export default Button;
