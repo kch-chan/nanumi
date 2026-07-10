@@ -7,43 +7,128 @@ on:
       - main
 
 jobs:
-  frontend-check:
-    name: Frontend Check
+  detect:
+    name: Detect Changes
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_projects: ${{ steps.detect.outputs.has_projects }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 변경된 폴더 & 프로젝트 타입 감지
+        id: detect
+        run: |
+          detect_project() {
+            local dir="$1"
+            while [ "$dir" != "." ]; do
+              if [ -f "$dir/package.json" ]; then
+                echo "$dir:node"; return
+              elif [ -f "$dir/pom.xml" ] || [ -f "$dir/mvnw" ]; then
+                echo "$dir:maven"; return
+              elif [ -f "$dir/build.gradle" ] || [ -f "$dir/build.gradle.kts" ]; then
+                echo "$dir:gradle"; return
+              fi
+              dir=$(dirname "$dir")
+            done
+          }
+
+          PROJECTS=$(
+            git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | while read -r file; do
+                dir=$(dirname "$file")
+                detect_project "$dir"
+              done \
+            | sort -u
+          )
+
+          MATRIX="[]"
+
+          for PROJECT in $PROJECTS; do
+            DIR="${PROJECT%%:*}"
+            TYPE="${PROJECT##*:}"
+
+            MATRIX=$(echo "$MATRIX" | jq -c \
+              --arg dir "$DIR" \
+              --arg type "$TYPE" \
+              '. + [{"dir": $dir, "type": $type}]')
+          done
+
+          echo "감지된 프로젝트: $MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "has_projects=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_projects=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: "Check: ${{ matrix.project.dir }} (${{ matrix.project.type }})"
+    needs: detect
+    if: needs.detect.outputs.has_projects == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.detect.outputs.matrix) }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
+        if: matrix.project.type == 'node'
         uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
+      - name: React - Install & Lint
+        if: matrix.project.type == 'node'
+        working-directory: ${{ matrix.project.dir }}
+        run: |
+          npm ci
+          if grep -q '"lint"' package.json; then
+            npm run lint
+          else
+            echo "lint 스크립트 없음, skip"
+          fi
 
-      - name: ESLint
-        working-directory: frontend
-        run: npm run lint
-
-  backend-check:
-    name: Backend Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Java
+      - name: Setup Java (Maven)
+        if: matrix.project.type == 'maven'
         uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
 
-      - name: Test & Checkstyle
-        working-directory: backend/api
+      - name: Spring Boot (Maven) - Verify
+        if: matrix.project.type == 'maven'
+        working-directory: ${{ matrix.project.dir }}
         run: |
-          chmod +x ./mvnw
-          ./mvnw verify
+          if [ -f "mvnw" ]; then
+            chmod +x ./mvnw
+            ./mvnw verify
+          else
+            mvn verify
+          fi
+
+      - name: Setup Java (Gradle)
+        if: matrix.project.type == 'gradle'
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Spring Boot (Gradle) - Check
+        if: matrix.project.type == 'gradle'
+        working-directory: ${{ matrix.project.dir }}
+        run: |
+          if [ -f "gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew check
+          else
+            gradle check
+          fi
