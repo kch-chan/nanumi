@@ -46,8 +46,6 @@ function Input({
         <input
           ref={ref}
           id={inputId}
-          aria-invalid={!!error}
-          aria-describedby={describeById}
           className={`
             h-11 w-full rounded-lg border bg-white text-sm text-stone-900
             placeholder:text-stone-400
