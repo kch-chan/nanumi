@@ -22,11 +22,6 @@ function Input({
 }: InputProps) {
   const defaultId = useId();
   const inputId = id ?? defaultId;
-  const describeById = error
-    ? `${inputId}-error`
-    : helperText
-      ? `${inputId}-helper`
-      : undefined;
 
   return (
     <div className="flex flex-col gap-1.5">
