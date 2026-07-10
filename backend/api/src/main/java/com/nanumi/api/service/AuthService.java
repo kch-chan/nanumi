@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserEntityRepository userEntityRepository;
-
-    public void signup(SignupRequest request) {
+    public void signup() {
 
     }
 

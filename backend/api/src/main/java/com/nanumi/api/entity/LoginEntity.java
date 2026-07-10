@@ -7,6 +7,4 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class LoginEntity {
-    
-}
+public class LoginEntity {}
