@@ -1,14 +1,11 @@
 package com.nanumi.api.service;
 
-import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    public void signup() {
-
-    }
+  public void signup() {}
 }
