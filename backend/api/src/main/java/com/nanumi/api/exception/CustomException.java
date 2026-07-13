@@ -1,5 +1,3 @@
 package com.nanumi.api.exception;
 
-public class CustomException {
-    
-}
+public class CustomException {}
