@@ -67,4 +67,20 @@ public class UserEntity {
     USER,
     ADMIN
   }
+
+  public void changeNickname(String nickname) {
+    this.nickname = nickname;
+  }
+
+  public void changeApt(String aptName) {
+    this.aptName = aptName;
+  }
+
+  public void changeDong(String dong) {
+    this.dong = dong;
+  }
+
+  public void changHo(String ho) {
+    this.ho = ho;
+  }
 }
