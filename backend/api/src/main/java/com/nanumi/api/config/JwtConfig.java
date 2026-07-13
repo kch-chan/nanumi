@@ -1,5 +1,3 @@
 package com.nanumi.api.config;
 
-public class JwtConfig {
-    
-}
+public class JwtConfig {}

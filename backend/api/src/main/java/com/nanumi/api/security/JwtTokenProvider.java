@@ -1,5 +1,3 @@
 package com.nanumi.api.security;
 
-public class JwtTokenProvider {
-    
-}
+public class JwtTokenProvider {}

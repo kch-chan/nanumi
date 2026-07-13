@@ -1,5 +1,3 @@
 package com.nanumi.api.exception;
 
-public class GlobalExceptionHandler {
-    
-}
+public class GlobalExceptionHandler {}
