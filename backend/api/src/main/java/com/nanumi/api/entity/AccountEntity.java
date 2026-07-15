@@ -47,11 +47,10 @@ public class AccountEntity {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  @Column(nullable = false, unique = true, length = 512)
+  @Column(unique = true, length = 512)
   private String refreshToken;
 
-  @Column(nullable = false)
-  private LocalDateTime expiryDate;
+  @Column private LocalDateTime expiryDate;
 
   @Builder
   public AccountEntity(UserEntity user, String email, String password) {
@@ -61,15 +60,17 @@ public class AccountEntity {
   }
 
   public boolean isExpired() {
-    return LocalDateTime.now().isAfter(this.expiryDate);
+    return this.expiryDate == null || LocalDateTime.now().isAfter(this.expiryDate);
   }
 
-  public void updateRefreshToken(String refreshToken) {
+  public void updateRefreshToken(String refreshToken, LocalDateTime expiryDate) {
     this.refreshToken = refreshToken;
+    this.expiryDate = expiryDate;
   }
 
   public void clearRefreshToken() {
     this.refreshToken = null;
+    this.expiryDate = null;
   }
 
   public void changePassword(String password) {
