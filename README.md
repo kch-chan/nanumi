@@ -36,5 +36,8 @@ cd backend/api
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 cd frontend/
-npm run dev
+pnpm install
+pnpm dev
 ```
+
+> frontend는 패키지 매니저로 **pnpm**을 사용합니다. pnpm이 없다면 `corepack enable pnpm` 으로 활성화하면 됩니다 (Node.js에 기본 포함).
