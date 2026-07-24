@@ -16,6 +16,10 @@ spring:
       enabled: true
       path: /h2-console
 
+jwt:
+  private-key-path: classpath:keys/private_key.pem
+  public-key-path: classpath:keys/public_key.pem
+
 logging:
   level:
     com.nanumi: debug

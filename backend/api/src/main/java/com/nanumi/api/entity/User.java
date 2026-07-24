@@ -23,7 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserEntity {
+public class User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +54,7 @@ public class UserEntity {
   private LocalDateTime updatedAt;
 
   @Builder
-  public UserEntity(String nickname, String aptName, String dong, String ho) {
+  public User(String nickname, String aptName, String dong, String ho) {
     this.nickname = nickname;
     this.aptName = aptName;
     this.dong = dong;
