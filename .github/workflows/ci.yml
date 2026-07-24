@@ -80,19 +80,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        if: matrix.project.type == 'node'
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ matrix.project.dir }}/package.json
+
       - name: Setup Node
         if: matrix.project.type == 'node'
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.project.dir }}/pnpm-lock.yaml
 
       - name: React - Install & Lint
         if: matrix.project.type == 'node'
         working-directory: ${{ matrix.project.dir }}
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
           if grep -q '"lint"' package.json; then
-            npm run lint
+            pnpm run lint
           else
             echo "lint 스크립트 없음, skip"
           fi
