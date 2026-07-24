@@ -5,12 +5,12 @@ import com.nanumi.api.dto.request.SignupRequest;
 import com.nanumi.api.dto.response.LoginResponse;
 import com.nanumi.api.dto.response.SignupResponse;
 import com.nanumi.api.dto.response.UserResponse;
-import com.nanumi.api.entity.AccountEntity;
-import com.nanumi.api.entity.UserEntity;
+import com.nanumi.api.entity.Account;
+import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
-import com.nanumi.api.repository.AccountEntityRepository;
-import com.nanumi.api.repository.UserEntityRepository;
+import com.nanumi.api.repository.AccountRepository;
+import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthService {
 
-  private final UserEntityRepository userEntityRepository;
-  private final AccountEntityRepository accountEntityRepository;
+  private final UserRepository userEntityRepository;
+  private final AccountRepository accountEntityRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
 
@@ -36,8 +36,8 @@ public class AuthService {
       throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
-    UserEntity user =
-        UserEntity.builder()
+    User user =
+        User.builder()
             .nickname(request.nickname())
             .aptName(request.aptName())
             .dong(request.dong())
@@ -45,8 +45,8 @@ public class AuthService {
             .build();
     userEntityRepository.save(user);
 
-    AccountEntity account =
-        AccountEntity.builder()
+    Account account =
+        Account.builder()
             .user(user)
             .email(request.email())
             .password(passwordEncoder.encode(request.password()))
@@ -57,7 +57,7 @@ public class AuthService {
   }
 
   public LoginResponse login(LoginRequest request) {
-    AccountEntity account =
+    Account account =
         accountEntityRepository
             .findByEmail(request.email())
             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
@@ -66,7 +66,7 @@ public class AuthService {
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 
-    UserEntity user = account.getUser();
+    User user = account.getUser();
     String accessToken = jwtTokenProvider.createAccessToken(user.getId());
     String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 

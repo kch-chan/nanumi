@@ -23,7 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
-public class AccountEntity {
+public class Account {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ public class AccountEntity {
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
-  private UserEntity user;
+  private User user;
 
   @Column(nullable = false, unique = true, length = 100)
   private String email;
@@ -47,13 +47,13 @@ public class AccountEntity {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  @Column(unique = true, length = 512)
+  @Column(unique = true, length = 1000)
   private String refreshToken;
 
   @Column private LocalDateTime expiryDate;
 
   @Builder
-  public AccountEntity(UserEntity user, String email, String password) {
+  public Account(User user, String email, String password) {
     this.user = user;
     this.email = email;
     this.password = password;

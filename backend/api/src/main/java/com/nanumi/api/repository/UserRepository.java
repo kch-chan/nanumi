@@ -1,18 +1,18 @@
 package com.nanumi.api.repository;
 
-import com.nanumi.api.entity.UserEntity;
+import com.nanumi.api.entity.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserEntityRepository extends JpaRepository<UserEntity, Long> {
-  Optional<UserEntity> findByNickname(String nickname);
+public interface UserRepository extends JpaRepository<User, Long> {
+  Optional<User> findByNickname(String nickname);
 
-  List<UserEntity> findByAptName(String aptName);
+  List<User> findByAptName(String aptName);
 
-  List<UserEntity> findByDong(String dong);
+  List<User> findByDong(String dong);
 
-  List<UserEntity> findByHo(String ho);
+  List<User> findByHo(String ho);
 
   boolean existsByNickname(String nickname);
 
