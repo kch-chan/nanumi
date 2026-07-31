@@ -2,9 +2,12 @@ package com.nanumi.api.service;
 
 import com.nanumi.api.dto.request.LoginRequest;
 import com.nanumi.api.dto.request.SignupRequest;
+import com.nanumi.api.dto.request.WithdrawalRequest;
 import com.nanumi.api.dto.response.LoginResponse;
+import com.nanumi.api.dto.response.LogoutResponse;
 import com.nanumi.api.dto.response.SignupResponse;
 import com.nanumi.api.dto.response.UserResponse;
+import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.entity.Account;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
@@ -67,6 +70,10 @@ public class AuthService {
     }
 
     User user = account.getUser();
+    if (user.isWithdrawn()) {
+      throw new CustomException(ErrorCode.WITHDRAWN_USER);
+    }
+
     String accessToken = jwtTokenProvider.createAccessToken(user.getId());
     String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
@@ -75,5 +82,37 @@ public class AuthService {
         LocalDateTime.now().plusSeconds(jwtTokenProvider.getRefreshTokenExpiration() / 1000));
 
     return LoginResponse.of(accessToken, refreshToken, UserResponse.from(user));
+  }
+
+  public LogoutResponse logout(Long userId) {
+    Account account =
+        accountEntityRepository
+            .findByUser_Id(userId)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    account.clearRefreshToken();
+
+    return LogoutResponse.of();
+  }
+
+  public WithdrawalResponse withdraw(Long userId, WithdrawalRequest request) {
+    Account account =
+        accountEntityRepository
+            .findByUser_Id(userId)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    User user = account.getUser();
+    if (user.isWithdrawn()) {
+      throw new CustomException(ErrorCode.WITHDRAWN_USER);
+    }
+
+    if (!passwordEncoder.matches(request.password(), account.getPassword())) {
+      throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    user.withdraw();
+    account.clearRefreshToken();
+
+    return WithdrawalResponse.of(user.getWithdrawnAt());
   }
 }

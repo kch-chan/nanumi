@@ -2,6 +2,7 @@ package com.nanumi.api.config;
 
 import com.nanumi.api.security.JwtAuthenticationFilter;
 import com.nanumi.api.security.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,12 +30,17 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/api/auth/**")
+                auth.requestMatchers("/api/auth/signup", "/api/auth/login")
                     .permitAll()
                     .requestMatchers("/h2-console/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
+        .exceptionHandling(
+            ex ->
+                ex.authenticationEntryPoint(
+                    (request, response, authException) ->
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
         .headers(headers -> headers.frameOptions(frame -> frame.disable()))
         .addFilterBefore(
             new JwtAuthenticationFilter(jwtTokenProvider),

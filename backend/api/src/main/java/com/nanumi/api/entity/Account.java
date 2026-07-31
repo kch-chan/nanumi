@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,7 +38,7 @@ public class Account {
   @Column(nullable = false, unique = true, length = 100)
   private String email;
 
-  @Column(nullable = true, length = 100)
+  @Column(nullable = true, length = 60)
   private String password;
 
   @CreatedDate

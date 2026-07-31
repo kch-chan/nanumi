@@ -45,6 +45,12 @@ public class User {
   @Column(nullable = false)
   private Role role = Role.USER;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private Status status = Status.ACTIVE;
+
+  @Column private LocalDateTime withdrawnAt;
+
   @CreatedDate
   @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -64,6 +70,20 @@ public class User {
   public enum Role {
     USER,
     ADMIN
+  }
+
+  public enum Status {
+    ACTIVE,
+    WITHDRAWN
+  }
+
+  public boolean isWithdrawn() {
+    return this.status == Status.WITHDRAWN;
+  }
+
+  public void withdraw() {
+    this.status = Status.WITHDRAWN;
+    this.withdrawnAt = LocalDateTime.now();
   }
 
   public void changeNickname(String nickname) {

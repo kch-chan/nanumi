@@ -1,12 +1,17 @@
 spring:
   datasource:
+    # 예: jdbc:mysql://<host>:3306/nanumi?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     url: ${DB_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
   h2:
     console:
       enabled: false
