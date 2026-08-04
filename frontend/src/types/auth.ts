@@ -1,5 +1,3 @@
-// 백엔드 DTO(com.nanumi.api.dto.*)와 대응되는 요청/응답 타입
-
 export interface SignupRequest {
   email: string;
   password: string;
@@ -12,6 +10,11 @@ export interface SignupRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface WithdrawalRequest {
+  password: string;
+  reason?: string;
 }
 
 export interface UserResponse {
@@ -32,6 +35,15 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   user: UserResponse;
+}
+
+export interface LogoutResponse {
+  message: string;
+}
+
+export interface WithdrawalResponse {
+  message: string;
+  withdrawnAt: string;
 }
 
 export interface ErrorResponse {

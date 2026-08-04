@@ -4,6 +4,7 @@ import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import PasswordInput from '../../components/PasswordInput';
 import ApiTestPanel from './ApiTestPanel';
+import SessionTestPanel from './SessionTestPanel';
 import { login, signup } from '../../api/auth';
 import type { LoginRequest, SignupRequest } from '../../types/auth';
 
@@ -49,10 +50,6 @@ function Test() {
         <h2 className="text-lg font-semibold text-stone-800">
           API 동작 테스트
         </h2>
-        <p className="text-sm text-stone-500">
-          입력값을 넣고 <strong>확인</strong>을 누르면 실제 요청을 보내고 응답
-          JSON을 그대로 보여줍니다. (백엔드가 실행 중이어야 합니다.)
-        </p>
 
         <ApiTestPanel
           title="회원가입"
@@ -99,6 +96,15 @@ function Test() {
           ]}
           request={(payload) => login(payload as unknown as LoginRequest)}
         />
+      </section>
+
+      <hr className="border-stone-200" />
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-stone-800">
+          세션 테스트 (로그인 → 로그아웃 / 회원탈퇴)
+        </h2>
+        <SessionTestPanel />
       </section>
 
       <hr className="border-stone-200" />
