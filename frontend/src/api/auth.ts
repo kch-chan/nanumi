@@ -25,13 +25,13 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return data;
 }
 
-// 로그아웃: 바디 없음. Authorization: Bearer {accessToken} 필요 (interceptor 자동 주입)
+// 로그아웃임. 바디는 없고 Authorization: Bearer {accessToken} 이 필요함 (interceptor 가 자동으로 넣어 줌)
 export async function logout(): Promise<LogoutResponse> {
   const { data } = await axiosInstance.post<LogoutResponse>('/auth/logout');
   return data;
 }
 
-// 회원탈퇴(Soft Delete): 비밀번호 재확인 필요. Authorization 헤더 필요
+// 회원탈퇴(Soft Delete)임. 비밀번호를 다시 확인하고 Authorization 헤더도 필요함
 export async function withdraw(
   payload: WithdrawalRequest,
 ): Promise<WithdrawalResponse> {

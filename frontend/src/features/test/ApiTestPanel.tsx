@@ -20,8 +20,8 @@ interface ApiTestPanelProps {
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-// 기능이 정상 동작하는지 확인하는 패널.
-// 입력값을 payload 로 만들어 실제 API 를 호출하고 응답 JSON 을 그대로 보여준다.
+// 기능이 제대로 도는지 확인해 보는 패널임
+// 입력값을 payload 로 만들어 실제 API 를 부르고, 응답 JSON 을 그대로 보여 줌
 function ApiTestPanel({
   title,
   method,

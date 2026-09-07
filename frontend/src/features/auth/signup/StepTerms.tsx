@@ -2,32 +2,34 @@ import { useState } from 'react';
 import Button from '../../../components/Button';
 import Checkbox from '../../../components/Checkbox';
 import Modal from '../../../components/Modal';
+import type { TermsKey } from '../../../constants/terms';
+import { TERMS_DOCUMENTS, findTermsDocument } from '../../../constants/terms';
+import TermsDocumentView from './TermsDocumentView';
 
 interface StepTermsProps {
   onNext: () => void;
 }
 
-const TERMS = [
-  { key: 'service', label: '(필수) 서비스 이용약관 동의', required: true },
-  { key: 'privacy', label: '(필수) 개인정보 수집·이용 동의', required: true },
-  { key: 'marketing', label: '(선택) 마케팅 정보 수신 동의', required: false },
-] as const;
-
 function StepTerms({ onNext }: StepTermsProps) {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
-  const [openTerm, setOpenTerm] = useState<string | null>(null);
+  const [openTerm, setOpenTerm] = useState<TermsKey | null>(null);
 
-  const allChecked = TERMS.every((term) => checked[term.key]);
-  const requiredChecked = TERMS.filter((term) => term.required).every(
+  const allChecked = TERMS_DOCUMENTS.every((term) => checked[term.key]);
+  const requiredChecked = TERMS_DOCUMENTS.filter((term) => term.required).every(
     (term) => checked[term.key],
   );
 
+  // 전문 모달에 그릴 약관임. 닫혀 있으면 null 임
+  const openDocument = findTermsDocument(openTerm);
+
   const toggleAll = () => {
     const next = !allChecked;
-    setChecked(Object.fromEntries(TERMS.map((term) => [term.key, next])));
+    setChecked(
+      Object.fromEntries(TERMS_DOCUMENTS.map((term) => [term.key, next])),
+    );
   };
 
-  const toggleOne = (key: string) =>
+  const toggleOne = (key: TermsKey) =>
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
@@ -51,7 +53,7 @@ function StepTerms({ onNext }: StepTermsProps) {
         </div>
 
         <div className="flex flex-col gap-2.5 px-1">
-          {TERMS.map((term) => (
+          {TERMS_DOCUMENTS.map((term) => (
             <div key={term.key} className="flex items-center justify-between">
               <Checkbox
                 label={term.label}
@@ -75,13 +77,16 @@ function StepTerms({ onNext }: StepTermsProps) {
       </Button>
 
       <Modal
-        isOpen={openTerm !== null}
+        isOpen={openDocument !== null}
         onClose={() => setOpenTerm(null)}
-        title="약관 내용"
+        title={openDocument?.title ?? '약관 내용'}
+        size="lg"
       >
-        <p className="text-sm text-stone-500">
-          약관 내용이 아직 입력되지 않았습니다.
-        </p>
+        {openDocument && (
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <TermsDocumentView terms={openDocument} />
+          </div>
+        )}
       </Modal>
     </div>
   );

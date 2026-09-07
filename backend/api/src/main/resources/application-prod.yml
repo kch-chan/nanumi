@@ -19,3 +19,12 @@ spring:
 jwt:
   private-key-path: ${JWT_PRIVATE_KEY_PATH}
   public-key-path: ${JWT_PUBLIC_KEY_PATH}
+
+nanumi:
+  security:
+    password:
+      iterations: ${PASSWORD_ITERATIONS:210000}
+      # 기본값을 두지 않음. 값이 없으면 뜨지 않게 해서 개발용 pepper 로 운영되는 걸 막음
+      pepper: ${PASSWORD_PEPPER}
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
