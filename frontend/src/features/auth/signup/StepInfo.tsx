@@ -43,8 +43,9 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
         password: values.password,
         nickname: values.nickname,
         aptName: values.aptName,
-        dong: values.dong,
-        ho: values.ho,
+        // 비워 두면 빈 문자열이라 아예 안 보냄 (서버도 빈 값은 null 로 바꾸지만 여기서도 걸러 둠)
+        dong: values.dong || undefined,
+        ho: values.ho || undefined,
       },
       { onSuccess: () => onComplete(values.nickname) },
     );

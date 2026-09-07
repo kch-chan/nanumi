@@ -50,3 +50,13 @@ export interface ErrorResponse {
   status: number;
   message: string;
 }
+
+export interface RefreshRequest {
+  refreshToken: string;
+}
+
+// 토큰 재발급 응답임. 리프레시 토큰도 매번 새로 나옴(회전)
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}

@@ -65,7 +65,7 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/api/auth/signup", "/api/auth/login")
+                auth.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/refresh")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
@@ -82,8 +82,12 @@ public class SecurityConfig {
         .exceptionHandling(
             ex ->
                 ex.authenticationEntryPoint(
-                    (request, response, authException) ->
-                        writeError(response, ErrorCode.INVALID_TOKEN)))
+                        (request, response, authException) ->
+                            writeError(response, ErrorCode.INVALID_TOKEN))
+                    // 권한이 모자란 경우도 같은 모양으로 내보냄
+                    .accessDeniedHandler(
+                        (request, response, deniedException) ->
+                            writeError(response, ErrorCode.ACCESS_DENIED)))
         .addFilterBefore(
             new JwtAuthenticationFilter(jwtTokenProvider),
             UsernamePasswordAuthenticationFilter.class);

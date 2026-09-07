@@ -1,5 +1,6 @@
 package com.nanumi.api.security;
 
+import com.nanumi.api.security.JwtTokenProvider.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,14 +25,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    String token = resolveToken(request);
-
-    if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-      Long userId = jwtTokenProvider.getUserId(token);
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+    // 액세스 토큰만 받음. 리프레시 토큰으로는 API 를 부를 수 없어야 함
+    jwtTokenProvider
+        .resolveUserId(resolveToken(request), TokenType.ACCESS)
+        .ifPresent(
+            userId ->
+                SecurityContextHolder.getContext()
+                    .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                            userId, null, Collections.emptyList())));
 
     filterChain.doFilter(request, response);
   }
