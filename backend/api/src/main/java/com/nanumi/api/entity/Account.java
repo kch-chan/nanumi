@@ -10,7 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,11 +21,19 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "accounts")
+@Table(
+    name = "accounts",
+    uniqueConstraints = {
+      @UniqueConstraint(name = "uk_accounts_email", columnNames = "email"),
+      @UniqueConstraint(name = "uk_accounts_refresh_token_hash", columnNames = "refresh_token_hash")
+    })
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account {
+
+  // 리프레시 토큰을 SHA-256 으로 줄여 담는 칸의 길이임 (16진수 64자)
+  public static final int REFRESH_TOKEN_HASH_LENGTH = 64;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +43,7 @@ public class Account {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @Column(nullable = false, unique = true, length = 100)
+  @Column(nullable = false, length = 100)
   private String email;
 
   // NanumiPasswordEncoder 가 만드는 해시 길이에 맞춤
@@ -49,8 +59,11 @@ public class Account {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  @Column(unique = true, length = 1000)
-  private String refreshToken;
+  // 리프레시 토큰을 그대로 담지 않고 SHA-256 해시만 담음
+  // 토큰 원문을 담아 두면 DB 가 유출됐을 때 그대로 로그인에 쓸 수 있는 자격 증명이 되기 때문임
+  // 길이도 64자로 고정돼서 MySQL utf8mb4 인덱스 상한(3072바이트)에 걸리지 않음
+  @Column(name = "refresh_token_hash", length = REFRESH_TOKEN_HASH_LENGTH)
+  private String refreshTokenHash;
 
   @Column private LocalDateTime expiryDate;
 
@@ -61,17 +74,22 @@ public class Account {
     this.password = password;
   }
 
+  // 담아 둔 리프레시 토큰이 없거나 기한이 지났으면 참임
   public boolean isExpired() {
     return this.expiryDate == null || LocalDateTime.now().isAfter(this.expiryDate);
   }
 
-  public void updateRefreshToken(String refreshToken, LocalDateTime expiryDate) {
-    this.refreshToken = refreshToken;
+  public boolean hasRefreshToken() {
+    return this.refreshTokenHash != null;
+  }
+
+  public void updateRefreshToken(String refreshTokenHash, LocalDateTime expiryDate) {
+    this.refreshTokenHash = refreshTokenHash;
     this.expiryDate = expiryDate;
   }
 
   public void clearRefreshToken() {
-    this.refreshToken = null;
+    this.refreshTokenHash = null;
     this.expiryDate = null;
   }
 

@@ -25,6 +25,21 @@
 1. 프로젝트 다운로드 후 터미널 2개 이상 준비
 2. 각각의 터미널에 backend 실행 코드와 frontend 실행 코드 입력
 
+**backend 실행 전 준비 (최초 1회)**
+
+JWT 서명에 쓰는 RSA 키가 필요합니다. 키는 저장소에 올리지 않으므로 클론 후 직접 만들어야 합니다.
+(만들지 않고 실행하면 `JwtTokenProvider` 에서 바로 실패합니다.)
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+mkdir -p backend/api/src/main/resources/keys
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out backend/api/src/main/resources/keys/private_key.pem
+openssl rsa -pubout -in backend/api/src/main/resources/keys/private_key.pem -out backend/api/src/main/resources/keys/public_key.pem
+```
+
+> 운영에서는 이 경로 대신 `JWT_PRIVATE_KEY_PATH` / `JWT_PUBLIC_KEY_PATH` 환경 변수로 키 위치를 넘깁니다.
+> 그 밖에 `PASSWORD_PEPPER`, `CORS_ALLOWED_ORIGINS`, `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` 도 함께 지정해야 합니다.
+
 **backend 실행 코드**
 ```bash
 cd "$(git rev-parse --show-toplevel)"
