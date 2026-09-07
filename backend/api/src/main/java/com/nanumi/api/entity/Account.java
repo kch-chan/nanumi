@@ -10,8 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,7 +36,9 @@ public class Account {
   @Column(nullable = false, unique = true, length = 100)
   private String email;
 
-  @Column(nullable = true, length = 60)
+  // NanumiPasswordEncoder 가 만드는 해시 길이에 맞춤
+  // 접두사·버전·반복 횟수에 salt(22자)와 hash(43자)를 이어 붙여서 기본값 기준 83자가 나옴
+  @Column(nullable = true, length = 83)
   private String password;
 
   @CreatedDate

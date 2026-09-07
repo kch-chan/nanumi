@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    // 개발 서버에서 /api 요청을 백엔드(Spring Boot, 8080)로 프록시
+    // 개발 서버에서 /api 요청을 백엔드(Spring Boot, 8080)로 넘겨 줌
     proxy: {
       '/api': 'http://localhost:8080',
     },
