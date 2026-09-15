@@ -5,8 +5,7 @@ spring:
     active: dev
 
 jwt:
-  # 로그아웃이나 탈퇴를 해도 이미 나간 액세스 토큰은 만료될 때까지 살아 있음
-  # 토큰마다 DB 를 뒤지지 않는 대신 수명을 짧게 잡아서 그 틈을 줄임
+  # 유효 기간 설정. 세션/쿠키 방식이 아니라 jwt 방식이기 때문에 서버에서 자체 폐기 위함
   access-token-expiration: 900000 # 15분
   refresh-token-expiration: 1209600000 # 14일
 

@@ -19,6 +19,7 @@ import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
 import com.nanumi.api.security.LoginAttemptService;
+import com.nanumi.api.security.password.NanumiPasswordEncoder;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -28,7 +29,6 @@ import java.util.HexFormat;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +39,7 @@ public class AuthService {
 
   private final UserRepository userEntityRepository;
   private final AccountRepository accountEntityRepository;
-  private final PasswordEncoder passwordEncoder;
+  private final NanumiPasswordEncoder nanumiPasswordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final LoginAttemptService loginAttemptService;
 
@@ -54,7 +54,7 @@ public class AuthService {
 
   @PostConstruct
   void initDummyPasswordHash() {
-    this.dummyPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
+    this.dummyPasswordHash = nanumiPasswordEncoder.encode(UUID.randomUUID().toString());
   }
 
   public SignupResponse signup(SignupRequest request) {
@@ -83,7 +83,7 @@ public class AuthService {
         Account.builder()
             .user(user)
             .email(email)
-            .password(passwordEncoder.encode(request.password()))
+            .password(nanumiPasswordEncoder.encode(request.password()))
             .build();
     accountEntityRepository.save(account);
 
@@ -101,12 +101,12 @@ public class AuthService {
     if (account == null) {
       // 여기서 바로 돌려주면 응답이 눈에 띄게 빨라져서 가입 여부가 드러남
       // 계정이 있을 때와 같은 만큼 해싱을 돌리고 똑같은 오류를 냄
-      passwordEncoder.matches(request.password(), dummyPasswordHash);
+      nanumiPasswordEncoder.matches(request.password(), dummyPasswordHash);
       loginAttemptService.recordFailure(email, clientIp);
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 
-    if (!passwordEncoder.matches(request.password(), account.getPassword())) {
+    if (!nanumiPasswordEncoder.matches(request.password(), account.getPassword())) {
       loginAttemptService.recordFailure(email, clientIp);
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
@@ -121,8 +121,8 @@ public class AuthService {
 
     // 평문 비밀번호를 알 수 있는 자리는 여기뿐임
     // 예전 BCrypt 해시나 반복 횟수가 낮은 해시는 이 참에 새 파라미터로 다시 해싱해 둠
-    if (passwordEncoder.upgradeEncoding(account.getPassword())) {
-      account.changePassword(passwordEncoder.encode(request.password()));
+    if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
+      account.changePassword(nanumiPasswordEncoder.encode(request.password()));
     }
 
     String accessToken = jwtTokenProvider.createAccessToken(user.getId());
@@ -194,7 +194,7 @@ public class AuthService {
       throw new CustomException(ErrorCode.WITHDRAWN_USER);
     }
 
-    if (!passwordEncoder.matches(request.password(), account.getPassword())) {
+    if (!nanumiPasswordEncoder.matches(request.password(), account.getPassword())) {
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 

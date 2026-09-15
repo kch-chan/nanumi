@@ -14,6 +14,11 @@
 - 로그인과 회원 가입 구현
 - 메인 페이지 및 게시글 작성 등의 작업은 추후 상황 보면서 작업 예정
 
+**문서**
+- [docs/architecture.md](docs/architecture.md) — 기술 스택과 디렉터리 구조
+- [docs/backend-code-guide.md](docs/backend-code-guide.md) — 백엔드 코드 안내 (계층 구조, 클래스별 상세, 호출 흐름)
+- [docs/project-rule.md](docs/project-rule.md) — 협업 규칙
+
 
 ## Getting Started
 

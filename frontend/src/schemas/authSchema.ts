@@ -55,8 +55,9 @@ const passwordMessage = (value: string): string | null => {
   if (WHITESPACE.test(value)) return '비밀번호에는 공백을 포함할 수 없습니다.';
   if (!PRINTABLE_ASCII.test(value))
     return '비밀번호에는 영문, 숫자, 특수문자만 사용할 수 있습니다.';
-  if (value.length < 8 || value.length > 64)
-    return '비밀번호는 8~64자여야 합니다.';
+  // 백엔드 PasswordValidator 의 MIN_LENGTH/MAX_LENGTH 와 같은 값이어야 함
+  if (value.length < 8 || value.length > 20)
+    return '비밀번호는 8~20자여야 합니다.';
   if (!LETTER.test(value) || !DIGIT.test(value) || !SPECIAL.test(value))
     return '비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.';
   return null;

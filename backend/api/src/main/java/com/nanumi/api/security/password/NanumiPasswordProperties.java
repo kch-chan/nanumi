@@ -14,8 +14,5 @@ public class NanumiPasswordProperties {
 
   // PBKDF2 반복 횟수임. 값을 올려도 기존 해시는 자기 반복 횟수로 검증되므로 로그인은 계속 됨
   private int iterations = 210_000;
-
-  // 서버만 아는 비밀값임. DB 가 통째로 유출돼도 이 값 없이는 대입 공격이 어려움
-  // 운영에서는 반드시 환경 변수로 주입해야 함
   private String pepper = "";
 }
