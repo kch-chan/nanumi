@@ -34,7 +34,8 @@ import org.springframework.util.StreamUtils;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-  // 토큰 종류를 적어 두는 클레임 이름임
+  // 액세스 토큰과 리프레시 토큰 구분하는 표식
+
   public static final String TOKEN_TYPE_CLAIM = "typ";
 
   private final JwtConfig jwtConfig;
@@ -72,6 +73,7 @@ public class JwtTokenProvider {
     try {
       Claims claims = parseClaims(token);
 
+      // 토큰과 검증기에서 기대하는 토큰 종류가 다를 때
       if (!expectedType.value().equals(claims.get(TOKEN_TYPE_CLAIM, String.class))) {
         return Optional.empty();
       }
@@ -88,10 +90,11 @@ public class JwtTokenProvider {
     Date expiry = new Date(now.getTime() + expiration);
 
     return Jwts.builder()
+        // 누구 것인가
         .subject(String.valueOf(userId))
-        // 토큰마다 다른 값을 넣어야 같은 순간에 발급해도 서로 다른 토큰이 나옴
-        // 나중에 토큰 단위로 무효화할 때도 이 값을 씀
+        // 같은 순간에 발급해도 다른 토큰을 만들어 줌
         .id(UUID.randomUUID().toString())
+        // 커스텀 클레임 생성. "typ": "access" 또는 "refresh"
         .claim(TOKEN_TYPE_CLAIM, type.value())
         .issuedAt(now)
         .expiration(expiry)
@@ -99,12 +102,15 @@ public class JwtTokenProvider {
         .compact();
   }
 
+  // publickey로 검증
   private Claims parseClaims(String token) {
     return Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(token).getPayload();
   }
 
   private PrivateKey readPrivateKey(String location) throws IOException, GeneralSecurityException {
+    // Base64를 바이트로 되돌림
     byte[] decoded = Base64.getDecoder().decode(readPem(location, "PRIVATE KEY"));
+    // 개인키를 담는 표준 형식을 이용. RSA 개인키를 Java에서 실제 PrivateKey 객체로 변환하는 과정
     return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decoded));
   }
 
@@ -124,7 +130,7 @@ public class JwtTokenProvider {
     }
   }
 
-  // 토큰 종류임. 값은 typ 클레임에 그대로 들어감
+  // 오타 방지
   public enum TokenType {
     ACCESS("access"),
     REFRESH("refresh");

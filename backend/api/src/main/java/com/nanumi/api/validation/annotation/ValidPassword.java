@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 @Documented
 @Constraint(validatedBy = PasswordValidator.class)
 public @interface ValidPassword {
-  String message() default "비밀번호는 8~64자의 영문, 숫자, 특수문자를 포함해야 합니다.";
+  String message() default "비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.";
 
   Class<?>[] groups() default {};
 

@@ -12,10 +12,11 @@ import java.util.regex.Pattern;
 // 걸린 규칙마다 메시지를 다르게 돌려줌
 public class PasswordValidator implements ConstraintValidator<ValidPassword, String> {
 
-  private static final int MIN_LENGTH = 8;
-  // 긴 비밀번호를 쓰는 사람을 막지 않으려고 상한을 넉넉히 둠 (공백은 아래에서 따로 막음)
-  // PBKDF2 는 bcrypt 와 달리 입력 길이 제한이 없어서 길어져도 문제없음
-  private static final int MAX_LENGTH = 64;
+  public static final int MIN_LENGTH = 8;
+
+  // 로그인 쪽 @Size 상한도 이 값을 그대로 참조함
+  // 가입 상한이 로그인 상한보다 크면 가입은 되는데 로그인은 안 되는 계정이 생기므로 한 곳에서만 정함
+  public static final int MAX_LENGTH = 20;
 
   // 공백과 제어문자를 뺀 출력 가능한 ASCII 임
   private static final Pattern ASCII_PATTERN = Pattern.compile("^[\\x21-\\x7E]+$");

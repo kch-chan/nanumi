@@ -1,5 +1,6 @@
 package com.nanumi.api.dto.request;
 
+import com.nanumi.api.validation.validator.PasswordValidator;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -10,4 +11,4 @@ import jakarta.validation.constraints.Size;
 // 상한이 없으면 수 MB 짜리 문자열을 보내는 것만으로 유니코드 정규화와 PBKDF2 를 그대로 돌리게 됨
 public record LoginRequest(
     @NotBlank(message = "이메일을 입력해 주세요.") @Size(max = 100, message = "이메일은 100자 이하여야 합니다.") String email,
-    @NotBlank(message = "비밀번호를 입력해 주세요.") @Size(max = 200, message = "비밀번호는 200자 이하여야 합니다.") String password) {}
+    @NotBlank(message = "비밀번호를 입력해 주세요.") @Size(max = PasswordValidator.MAX_LENGTH, message = "비밀번호는 20자 이하여야 합니다.") String password) {}

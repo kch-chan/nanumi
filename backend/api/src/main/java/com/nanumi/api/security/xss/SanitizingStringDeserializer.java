@@ -17,17 +17,17 @@ import tools.jackson.databind.deser.std.StdScalarDeserializer;
 // 검증(@SafeText 등)보다 먼저 도는 자리라, 여기서 다듬고 나면 검증기는 깨끗한 값만 보게 됨
 public class SanitizingStringDeserializer extends StdScalarDeserializer<String> {
 
-  // 비밀번호는 앞뒤 공백까지 그대로 둬야 회원이 정한 값과 어긋나지 않음
+  // 비밀번호 필드 구분
   private static final String PASSWORD_MARKER = "password";
 
-  private static final char SOFT_HYPHEN = 0x00AD;
-  private static final char ZERO_WIDTH_START = 0x200B;
+  private static final char SOFT_HYPHEN = 0x00AD; // 눈에 안 보이는 하이픈. 글자 수를 늘리거나 줄이는 데 쓰임
+  private static final char ZERO_WIDTH_START = 0x200B; // 눈에 안 보이는 공백. 글자 수를 늘리거나 줄이는 데 쓰임
   private static final char ZERO_WIDTH_END = 0x200F;
-  private static final char BIDI_START = 0x202A;
+  private static final char BIDI_START = 0x202A; // 글자 방향을 뒤집는 문자
   private static final char BIDI_END = 0x202E;
-  private static final char WORD_JOINER_START = 0x2060;
+  private static final char WORD_JOINER_START = 0x2060; // 줄 바꿈을 방지하는 문자.
   private static final char WORD_JOINER_END = 0x2064;
-  private static final char BYTE_ORDER_MARK = 0xFEFF;
+  private static final char BYTE_ORDER_MARK = 0xFEFF; // 파일 앞에 붙는 보이지 않는 표식
 
   public SanitizingStringDeserializer() {
     super(String.class);
@@ -35,34 +35,36 @@ public class SanitizingStringDeserializer extends StdScalarDeserializer<String> 
 
   @Override
   public String deserialize(JsonParser parser, DeserializationContext context) {
-    String value = parser.getValueAsString();
+    String value = parser.getValueAsString(); // JSON 값
     if (value == null) {
       return null;
     }
     return sanitize(value, parser.currentName());
   }
 
-  // 필드 이름에 password 가 들어가면 앞뒤 공백을 남김
-  // 테스트에서 바로 부를 수 있도록 열어 둠
   public String sanitize(String value, String fieldName) {
     if (value == null) {
       return null;
     }
 
+    // 전각 문자나 합성 문자를 한 모양으로 맞춤
     String normalized = Normalizer.normalize(value, Normalizer.Form.NFKC);
+    // 보이지 않는 문자 제거
     String stripped = removeInvisible(normalized);
 
+    // 비밀번호는 앞뒤 공백까지 그대로 둬야 회원이 정한 값과 어긋나지 않음
     return isPasswordField(fieldName) ? stripped : stripped.strip();
   }
 
   private boolean isPasswordField(String fieldName) {
+    // 특정 국가나 언어에 영향받지 않는 소문자로 바꿔서 검사
     return fieldName != null && fieldName.toLowerCase(Locale.ROOT).contains(PASSWORD_MARKER);
   }
 
-  // 줄바꿈과 탭도 함께 지움
-  // 지금 받는 값 중에 여러 줄을 쓰는 항목이 없고, @SafeText 도 제어문자를 거절하므로 기준을 맞춰 둠
   private String removeInvisible(String value) {
+    // 문자열을 중간에 계속 추가하거나 수정하기 위해 담아둠
     StringBuilder cleaned = new StringBuilder(value.length());
+    // 글자 하나씩 검사하면서 보이지 않는 글자는 건너뜀
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
       if (isInvisible(c)) {
@@ -74,7 +76,7 @@ public class SanitizingStringDeserializer extends StdScalarDeserializer<String> 
   }
 
   private boolean isInvisible(char c) {
-    if (Character.isISOControl(c)) {
+    if (Character.isISOControl(c)) { // 제어문자. 줄바꿈, 탭, 백스페이스 등
       return true;
     }
     return c == SOFT_HYPHEN

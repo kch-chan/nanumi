@@ -79,8 +79,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
       log.debug("스프링이 처리한 4xx 예외임: {}", e.getMessage());
     }
 
+    // 스프링이 만든 ProblemDetail 이 body 로 넘어오는 경로가 있으므로(깨진 JSON 등),
+    // 우리가 직접 넣은 ErrorResponse 가 아니면 무조건 우리 형식으로 바꿔서 내보냄
     Object errorBody =
-        body != null ? body : ErrorResponse.of(statusCode.value(), messageOf(statusCode));
+        (body instanceof ErrorResponse)
+            ? body
+            : ErrorResponse.of(statusCode.value(), messageOf(statusCode));
     return super.handleExceptionInternal(e, errorBody, headers, statusCode, request);
   }
 

@@ -11,6 +11,7 @@ import tools.jackson.databind.module.SimpleModule;
 @Configuration
 public class JacksonConfig {
 
+  // string을 처리할 때 사용자 정의 deserializer를 끼워 넣음
   @Bean
   public JacksonModule sanitizingStringModule() {
     SimpleModule module = new SimpleModule("nanumi-sanitizing-string");
