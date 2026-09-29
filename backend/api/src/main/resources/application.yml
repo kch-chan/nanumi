@@ -1,23 +1,57 @@
+# ---------------------------------------------------------------------------
+# 나누미 API 설정
+#
+# 파일 하나에 프로필별 설정을 --- 로 나눠서 담음(스프링 부트의 다중 문서 방식).
+# 위쪽은 모든 프로필에 공통으로 적용되고, 아래 문서들은 해당 프로필일 때만 덧씌워짐.
+#
+# 값은 .env.<프로필> 파일에서 읽어 옴.
+#   개발: .env.dev / 운영: .env.prod   (둘 다 backend/api 아래, git 에 올라가지 않음)
+#
+# 비밀값(DB 비밀번호, pepper, JWT 개인키)은 .env 에 두지 않음.
+# settings.xml -> pom.xml -> 환경 변수 순서로 전달됨. docs/deployment.md 참고.
+# ---------------------------------------------------------------------------
 spring:
   application:
     name: api
+
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # DB 는 개발·운영 모두 MySQL 을 씀. 주소·계정만 프로필별로 다름
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
 
 jwt:
   # 유효 기간 설정. 세션/쿠키 방식이 아니라 jwt 방식이기 때문에 서버에서 자체 폐기 위함
   access-token-expiration: 900000 # 15분
   refresh-token-expiration: 1209600000 # 14일
 
+  # 키를 넣는 방법은 두 가지임
+  #  1) 파일 경로 (아래 두 줄) - 로컬 개발에서 씀
+  #  2) PEM 본문 직접 (JWT_PRIVATE_KEY/JWT_PUBLIC_KEY) - CI·운영에서 씀
+  # 본문이 비어 있지 않으면 본문이 우선하고, 비어 있으면 경로를 읽음
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private_key.pem}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public_key.pem}
+  private-key: ${JWT_PRIVATE_KEY:}
+  public-key: ${JWT_PUBLIC_KEY:}
+
 nanumi:
   security:
     password:
       # PBKDF2 반복 횟수. 해시에 같이 적히므로 나중에 올려도 기존 계정은 그대로 로그인됨
-      iterations: 210000
-      # 서버만 아는 비밀값. 운영에서는 반드시 환경 변수로 덮어써야 함
+      iterations: ${PASSWORD_ITERATIONS:210000}
+      # 서버만 아는 비밀값. settings.xml 이나 환경 변수로 넣음
       pepper: ${PASSWORD_PEPPER:nanumi-local-dev-pepper}
     cors:
-      # 브라우저에서 이 API 를 직접 부를 수 있는 출처. 개발용 Vite 서버 주소임
+      # 브라우저에서 이 API 를 직접 부를 수 있는 출처
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
 
 server:
@@ -32,3 +66,44 @@ server:
   # 프록시가 바깥에서 들어온 헤더를 지워 준다는 보장이 없으면 켜면 안 됨
   # 켜는 순간 헤더만 바꿔 가며 로그인 잠금을 통과할 수 있게 됨
   forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+
+---
+# ===== 개발 =================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+    # optional: 이라 파일이 없어도 기동은 진행됨
+    # [.properties] 는 확장자가 없는 형식을 properties 로 읽으라는 뜻
+    import:
+      - optional:file:./.env.dev[.properties]
+      - optional:file:./backend/api/.env.dev[.properties]
+
+  jpa:
+    hibernate:
+      # 개발 중에는 엔티티를 고치면 테이블도 따라가게 둠
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.nanumi: debug
+
+---
+# ===== 운영 =================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - optional:file:./.env.prod[.properties]
+      - optional:file:./backend/api/.env.prod[.properties]
+
+  jpa:
+    hibernate:
+      # 운영에서는 스키마를 건드리지 않고, 엔티티와 다르면 기동을 거부함
+      ddl-auto: validate
+    show-sql: false

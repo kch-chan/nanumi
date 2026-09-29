@@ -47,8 +47,20 @@ public class JwtTokenProvider {
 
   @PostConstruct
   private void init() throws IOException, GeneralSecurityException {
-    this.privateKey = readPrivateKey(jwtConfig.getPrivateKeyPath());
-    this.publicKey = readPublicKey(jwtConfig.getPublicKeyPath());
+    this.privateKey =
+        readPrivateKey(
+            pemOf(jwtConfig.getPrivateKey(), jwtConfig.getPrivateKeyPath(), "PRIVATE KEY"));
+    this.publicKey =
+        readPublicKey(pemOf(jwtConfig.getPublicKey(), jwtConfig.getPublicKeyPath(), "PUBLIC KEY"));
+  }
+
+  // 설정에 PEM 본문이 들어 있으면 그걸 쓰고, 비어 있으면 경로에서 파일을 읽음
+  // 비밀 저장소가 파일 대신 문자열만 줄 수 있는 환경(CI, 컨테이너)을 위한 것임
+  private String pemOf(String content, String location, String type) throws IOException {
+    if (content != null && !content.isBlank()) {
+      return stripPem(content, type);
+    }
+    return readPem(location, type);
   }
 
   public String createAccessToken(Long userId) {
@@ -107,27 +119,31 @@ public class JwtTokenProvider {
     return Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(token).getPayload();
   }
 
-  private PrivateKey readPrivateKey(String location) throws IOException, GeneralSecurityException {
+  private PrivateKey readPrivateKey(String base64) throws GeneralSecurityException {
     // Base64를 바이트로 되돌림
-    byte[] decoded = Base64.getDecoder().decode(readPem(location, "PRIVATE KEY"));
+    byte[] decoded = Base64.getDecoder().decode(base64);
     // 개인키를 담는 표준 형식을 이용. RSA 개인키를 Java에서 실제 PrivateKey 객체로 변환하는 과정
     return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decoded));
   }
 
-  private PublicKey readPublicKey(String location) throws IOException, GeneralSecurityException {
-    byte[] decoded = Base64.getDecoder().decode(readPem(location, "PUBLIC KEY"));
+  private PublicKey readPublicKey(String base64) throws GeneralSecurityException {
+    byte[] decoded = Base64.getDecoder().decode(base64);
     return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decoded));
   }
 
   private String readPem(String location, String type) throws IOException {
     Resource resource = resourceLoader.getResource(location);
     try (InputStream inputStream = resource.getInputStream()) {
-      String content = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-      return content
-          .replace("-----BEGIN " + type + "-----", "")
-          .replace("-----END " + type + "-----", "")
-          .replaceAll("\\s", "");
+      return stripPem(StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8), type);
     }
+  }
+
+  // PEM 머리말과 줄바꿈을 걷어내고 Base64 본문만 남김
+  private String stripPem(String content, String type) {
+    return content
+        .replace("-----BEGIN " + type + "-----", "")
+        .replace("-----END " + type + "-----", "")
+        .replaceAll("\\s", "");
   }
 
   // 오타 방지

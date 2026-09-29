@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -43,23 +42,8 @@ public class SecurityConfig {
   // HSTS(HTTP Strict Transport Security). 앞으로 이 사이트는 HTTPS로만 접속
   private static final long HSTS_MAX_AGE_SECONDS = 31_536_000L; // 1년
 
-  // H2 콘솔은 개발 프로필에서만 열림
-  // 콘솔이 iframe 을 쓰기 때문에 frameOptions 를 풀어야 하는데,
-  // 그걸 API 체인에 같이 두면 운영에서도 클릭재킹에 열리므로 체인을 아예 나눔
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  @Profile("dev")
-  public SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
-    http.securityMatcher("/h2-console/**")
-        .csrf(csrf -> csrf.disable())
-        .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-
-    return http.build();
-  }
-
-  @Bean
-  @Order(Ordered.HIGHEST_PRECEDENCE + 1)
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       JwtTokenProvider jwtTokenProvider,

@@ -104,6 +104,11 @@ jobs:
           else
             echo "lint 스크립트 없음, skip"
           fi
+          if grep -q '"test"' package.json; then
+            pnpm run test
+          else
+            echo "test 스크립트 없음, skip"
+          fi
 
       - name: Setup Java (Maven)
         if: matrix.project.type == 'maven'
@@ -111,6 +116,22 @@ jobs:
         with:
           java-version: 21
           distribution: temurin
+
+      # 저장소에 없는 settings.xml(비밀값)을 시크릿에서 복원함
+      # 시크릿이 없으면 이 단계는 건너뛰고, pom.xml 의 개발용 기본값으로 빌드됨
+      - name: Maven settings.xml 복원
+        if: matrix.project.type == 'maven'
+        env:
+          MAVEN_SETTINGS: ${{ secrets.MAVEN_SETTINGS }}
+        run: |
+          if [ -z "$MAVEN_SETTINGS" ]; then
+            echo "MAVEN_SETTINGS 시크릿이 없음. pom.xml 의 개발용 기본값으로 진행함"
+            exit 0
+          fi
+          mkdir -p ~/.m2
+          printf '%s' "$MAVEN_SETTINGS" > ~/.m2/settings.xml
+          chmod 600 ~/.m2/settings.xml
+          echo "settings.xml 복원 완료 ($(wc -c < ~/.m2/settings.xml) bytes)"
 
       - name: Spring Boot (Maven) - Verify
         if: matrix.project.type == 'maven'

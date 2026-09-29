@@ -28,12 +28,16 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+
+		<!-- 비밀값. 실제 값은 git 에 없는 settings.xml 이 덮어씀 (docs/deployment.md 참고) -->
+		<!-- 여기 값은 settings.xml 없이도 빌드·테스트가 돌아가게 하는 개발용 기본값임 -->
+		<nanumi.db.password>nanumi</nanumi.db.password>
+		<nanumi.password.pepper>nanumi-local-dev-pepper</nanumi.password.pepper>
+		<!-- 비워 두면 앱이 .env 의 키 파일 경로를 읽음 -->
+		<nanumi.jwt.private-key/>
+		<nanumi.jwt.public-key/>
 	</properties>
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-h2console</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -51,11 +55,6 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
@@ -113,12 +112,32 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<!-- settings.xml 의 비밀값을 환경 변수로 바꿔서 앱에 넘김 -->
+					<environmentVariables>
+						<DB_PASSWORD>${nanumi.db.password}</DB_PASSWORD>
+						<PASSWORD_PEPPER>${nanumi.password.pepper}</PASSWORD_PEPPER>
+						<JWT_PRIVATE_KEY>${nanumi.jwt.private-key}</JWT_PRIVATE_KEY>
+						<JWT_PUBLIC_KEY>${nanumi.jwt.public-key}</JWT_PUBLIC_KEY>
+					</environmentVariables>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<!-- 테스트에도 settings.xml 의 비밀값을 환경 변수로 넘김 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<environmentVariables>
+						<DB_PASSWORD>${nanumi.db.password}</DB_PASSWORD>
+						<PASSWORD_PEPPER>${nanumi.password.pepper}</PASSWORD_PEPPER>
+						<JWT_PRIVATE_KEY>${nanumi.jwt.private-key}</JWT_PRIVATE_KEY>
+						<JWT_PUBLIC_KEY>${nanumi.jwt.public-key}</JWT_PUBLIC_KEY>
+					</environmentVariables>
 				</configuration>
 			</plugin>
 			<plugin>
