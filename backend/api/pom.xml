@@ -60,6 +60,15 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- 테스트 전용 인메모리 DB.
+		     운영·개발 실행은 MySQL 만 씀(scope=test 라 실행 파일에 들어가지 않음).
+		     저장소 테스트를 돌리려고 CI 에 MySQL 을 띄우지 않기 위한 것임 -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

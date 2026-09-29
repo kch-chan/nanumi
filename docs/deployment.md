@@ -26,12 +26,28 @@ settings.xml ── pom.xml ── 환경 변수 ──→ 앱
 
 H2 를 쓰지 않습니다. 개발도 MySQL 로 붙습니다.
 
+root 계정으로 접속해서 실행합니다. (`mysql -u root -p`)
+
 ```sql
-CREATE DATABASE nanumi_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE USER 'nanumi'@'localhost' IDENTIFIED BY '여기에_비밀번호';
-GRANT ALL PRIVILEGES ON nanumi_dev.* TO 'nanumi'@'localhost';
+CREATE DATABASE IF NOT EXISTS nanumi_dev
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
+-- 계정이 없으면 함께 만듦. 이미 있으면 이 줄은 건너뛰어도 됨
+CREATE USER IF NOT EXISTS 'abc'@'%' IDENTIFIED BY '여기에_비밀번호';
+
+-- 계정을 만들기만 하고 권한을 안 주면 접속은 되는데 DB 를 못 씀
+-- (Access denied for user 'abc'@'%' to database 'nanumi_dev')
+GRANT ALL PRIVILEGES ON nanumi_dev.* TO 'abc'@'%';
 FLUSH PRIVILEGES;
 ```
+
+확인:
+
+```sql
+SHOW GRANTS FOR 'abc'@'%';
+```
+
+`GRANT USAGE ON *.*` 한 줄만 나오면 아직 권한이 없는 것입니다. `USAGE` 는 "접속만 허용" 이라는 뜻입니다.
 
 운영용은 `nanumi_dev` 대신 `nanumi` 로 하나 더 만들면 됩니다.
 
@@ -158,10 +174,15 @@ pnpm dev
 # settings.xml 값이 Maven 에 들어왔는지
 ./mvnw -s ../../settings.xml help:evaluate -Dexpression=nanumi.password.pepper -DforceStdout
 
-# 테스트
+# MySQL 계정·권한 확인
+mysql -u abc -p -e "SHOW DATABASES;"
+
+# 테스트 (DB 없이 돎)
 cd backend/api && ./mvnw -s ../../settings.xml verify
 cd frontend && pnpm test
 ```
+
+테스트는 DB 를 띄우지 않아도 돕니다. 저장소 테스트만 인메모리 DB(H2)를 쓰고, 나머지는 DB 를 아예 쓰지 않습니다. H2 는 `scope=test` 라 실행 파일에는 들어가지 않습니다.
 
 앱을 띄웠을 때 `Communications link failure` 가 나오면 MySQL 이 안 떠 있거나 `DB_URL` 이 틀린 것입니다. `Access denied` 면 계정·비밀번호가 틀린 것입니다.
 
