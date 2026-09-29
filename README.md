@@ -17,6 +17,7 @@
 **문서**
 - [docs/architecture.md](docs/architecture.md) — 기술 스택과 디렉터리 구조
 - [docs/backend-code-guide.md](docs/backend-code-guide.md) — 백엔드 코드 안내 (계층 구조, 클래스별 상세, 호출 흐름)
+- [docs/deployment.md](docs/deployment.md) — 설정 파일 구조, MySQL 준비, GitHub 시크릿 공유 방법
 - [docs/project-rule.md](docs/project-rule.md) — 협업 규칙
 
 
@@ -32,25 +33,45 @@
 
 **backend 실행 전 준비 (최초 1회)**
 
-JWT 서명에 쓰는 RSA 키가 필요합니다. 키는 저장소에 올리지 않으므로 클론 후 직접 만들어야 합니다.
+DB 는 MySQL 을 씁니다. 개발도 운영도 같습니다. 먼저 DB 와 계정을 만들어 주세요.
+
+```sql
+CREATE DATABASE nanumi_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE USER 'nanumi'@'localhost' IDENTIFIED BY '여기에_비밀번호';
+GRANT ALL PRIVILEGES ON nanumi_dev.* TO 'nanumi'@'localhost';
+```
+
+그리고 설정 파일 두 개를 만듭니다. 둘 다 저장소에 올라가지 않습니다.
+
+| 파일 | 담는 것 |
+| --- | --- |
+| `backend/api/.env.dev` | DB 주소·계정명·CORS 출처 같은 환경 값 |
+| `settings.xml` (저장소 루트) | DB 비밀번호·pepper·JWT 키 같은 비밀값 |
+
+항목별 설명과 GitHub 시크릿 공유 방법은 **[docs/deployment.md](docs/deployment.md)** 에 있습니다.
+
+JWT 서명에 쓰는 RSA 키도 직접 만들어야 합니다.
 (만들지 않고 실행하면 `JwtTokenProvider` 에서 바로 실패합니다.)
 
 ```bash
-cd "$(git rev-parse --show-toplevel)"
-mkdir -p backend/api/src/main/resources/keys
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out backend/api/src/main/resources/keys/private_key.pem
-openssl rsa -pubout -in backend/api/src/main/resources/keys/private_key.pem -out backend/api/src/main/resources/keys/public_key.pem
+cd "$(git rev-parse --show-toplevel)/backend/api"
+mkdir -p keys
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/private_key.pem
+openssl rsa -pubout -in keys/private_key.pem -out keys/public_key.pem
 ```
 
-> 운영에서는 이 경로 대신 `JWT_PRIVATE_KEY_PATH` / `JWT_PUBLIC_KEY_PATH` 환경 변수로 키 위치를 넘깁니다.
-> 그 밖에 `PASSWORD_PEPPER`, `CORS_ALLOWED_ORIGINS`, `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` 도 함께 지정해야 합니다.
+> 키 위치는 `.env.dev` 의 `JWT_PRIVATE_KEY_PATH` / `JWT_PUBLIC_KEY_PATH` 로 지정합니다.
+> 파일 대신 PEM 본문을 `settings.xml` 에 직접 넣어도 됩니다(CI·컨테이너에서 편함).
 
 **backend 실행 코드**
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 cd backend/api
-./mvnw spring-boot:run
+./mvnw -s ../../settings.xml spring-boot:run
 ```
+
+> `-s` 는 비밀값이 든 `settings.xml` 위치를 알려 주는 것입니다.
+> `~/.m2/settings.xml` 에 두면 `-s` 없이 `./mvnw spring-boot:run` 만 해도 됩니다.
 
 **frontend 실행 코드**
 ```bash
