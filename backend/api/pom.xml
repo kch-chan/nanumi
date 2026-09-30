@@ -29,11 +29,8 @@
 	<properties>
 		<java.version>21</java.version>
 	</properties>
+
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-h2console</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -52,10 +49,20 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- H2 는 쓰지 않음.
+		     db/migration 의 SQL 은 PostgreSQL 문법이라 H2 에서 그대로 돌지 않고,
+		     그래서 인메모리로 테스트하면 마이그레이션이 실제로 도는지,
+		     엔티티와 스키마가 맞는지를 확인할 수 없음.
+		     운영이 ddl-auto: validate 라서 어긋나면 "배포 기동 실패"로 처음 알게 됨.
+
+		     스프링을 띄우는 테스트는 실제 PostgreSQL 에 붙음.
+		     로컬은 docker compose 로 띄운 DB, CI 는 워크플로의 서비스 컨테이너를 씀.
+		     자세한 내용은 src/test/resources/application-test.yml 참고 -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -86,19 +93,42 @@
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
-			<version>0.11.5</version>
+			<version>0.12.6</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
-			<version>0.11.5</version>
+			<version>0.12.6</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
-			<version>0.11.5</version>
+			<version>0.12.6</version>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- 스키마 변경을 db/migration 의 SQL 파일로 관리함 -->
+		<!-- 운영은 ddl-auto: validate 라 Hibernate 가 테이블을 만들지 않으므로 이쪽이 만듦 -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<!-- PostgreSQL 은 별도 모듈이 있어야 Flyway 가 인식함 -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<!-- Boot 4 는 자동 설정이 모듈별로 쪼개져 있어서 이게 없으면 Flyway 가 아예 실행되지 않음
+		     (flyway-core 만 넣으면 조용히 무시됨) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<!-- Render 가 /actuator/health 로 기동 여부를 확인함
+		     이게 없으면 기동에 실패한 버전으로 교체돼도 Render 가 알아채지 못함 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 	</dependencies>
 
