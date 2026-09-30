@@ -94,6 +94,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # 러너에 들어 있을 것으로 기대하지 않고 직접 넣음
+      - name: pyyaml 준비
+        run: python3 -m pip install --quiet pyyaml
+
       - name: YAML / JSON 형식 확인
         run: |
           python3 - <<'PY'
