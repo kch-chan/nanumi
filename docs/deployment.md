@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 프런트엔드 | **Vercel** | 정적 사이트 (`frontend/vercel.json`) |
 | 백엔드 | **Render** | 도커 이미지 (`render.yaml`, `backend/api/Dockerfile`) |
-| 데이터베이스 | **Neon** | PostgreSQL 17 |
+| 데이터베이스 | **Neon** | PostgreSQL 18 |
 
 세 서비스로 나눠도 코드는 한 저장소에 있고, `main` 에 병합하면 Vercel 과 Render 가 각자 알아서 배포합니다. 배포용 GitHub Actions 워크플로는 없습니다.
 

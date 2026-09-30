@@ -17,7 +17,7 @@
 # application.yml 의 개발용 기본값과 같은 이유로 그대로 적어 둠.
 services:
   db:
-    image: postgres:17
+    image: postgres:18
     container_name: nanumi-db
     restart: unless-stopped
     ports:
@@ -28,7 +28,9 @@ services:
       POSTGRES_PASSWORD: aadd123
     volumes:
       # 이 줄이 없으면 컨테이너를 지울 때 테이블과 데이터가 함께 사라짐
-      - nanumi-db-data:/var/lib/postgresql/data
+      # postgres:18 부터는 /var/lib/postgresql 에 붙임(안쪽에 버전별 폴더를 둠).
+      # 17 처럼 .../data 에 붙이면 버전 업그레이드 때 기동이 실패함
+      - nanumi-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U abc -d nanumi_dev"]
       interval: 5s
