@@ -2,16 +2,16 @@
 #
 # 실제 실행은 MySQL 만 씀. 여기 H2 를 두는 이유는 CI 에 DB 를 띄우지 않고도
 # 파생 쿼리(findByUser_Id 처럼 메서드 이름으로 만들어지는 쿼리)가 성립하는지 확인하기 위함임
-# MODE=MySQL 로 MySQL 문법을 흉내 냄
+# MODE=PostgreSQL 로 PostgreSQL 문법을 흉내 냄
 spring:
   datasource:
-    url: jdbc:h2:mem:nanumi-test;MODE=MySQL;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:nanumi-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
   # 테스트는 Flyway 를 쓰지 않음
-  # db/migration 의 SQL 이 MySQL 문법(ENUM, ENGINE=InnoDB)이라 H2 에서 그대로 돌지 않고,
+  # db/migration 의 SQL 이 PostgreSQL 문법(GENERATED AS IDENTITY)이라 H2 에서 그대로 돌지 않고,
   # 테스트마다 빈 DB 를 새로 만들므로 이력 관리도 의미가 없음
   flyway:
     enabled: false

@@ -48,8 +48,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -111,16 +111,22 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
-		<!-- MySQL 8 이상은 별도 모듈이 있어야 Flyway 가 인식함 -->
+		<!-- PostgreSQL 은 별도 모듈이 있어야 Flyway 가 인식함 -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-mysql</artifactId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<!-- Boot 4 는 자동 설정이 모듈별로 쪼개져 있어서 이게 없으면 Flyway 가 아예 실행되지 않음
 		     (flyway-core 만 넣으면 조용히 무시됨) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<!-- Render 가 /actuator/health 로 기동 여부를 확인함
+		     이게 없으면 기동에 실패한 버전으로 교체돼도 Render 가 알아채지 못함 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 	</dependencies>
 

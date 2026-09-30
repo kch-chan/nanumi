@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -47,11 +49,43 @@ public class JwtTokenProvider {
 
   @PostConstruct
   private void init() throws IOException, GeneralSecurityException {
+    if (jwtConfig.isGenerateKeyIfMissing() && !hasConfiguredKey()) {
+      generateTemporaryKeyPair();
+      return;
+    }
+
     this.privateKey =
         readPrivateKey(
             pemOf(jwtConfig.getPrivateKey(), jwtConfig.getPrivateKeyPath(), "PRIVATE KEY"));
     this.publicKey =
         readPublicKey(pemOf(jwtConfig.getPublicKey(), jwtConfig.getPublicKeyPath(), "PUBLIC KEY"));
+  }
+
+  // 설정에 PEM 본문도 없고 키 파일도 없는 상태인지 봄
+  private boolean hasConfiguredKey() {
+    if (jwtConfig.getPrivateKey() != null && !jwtConfig.getPrivateKey().isBlank()) {
+      return true;
+    }
+    String location = jwtConfig.getPrivateKeyPath();
+    return location != null && !location.isBlank() && resourceLoader.getResource(location).exists();
+  }
+
+  // 키가 없으면 그 자리에서 한 쌍 만들어 씀. 개발 프로필에서만 켜짐
+  //
+  // 키 파일은 .gitignore 대상이라 저장소를 새로 받은 사람에게는 없음.
+  // 그때 기동이 실패하면 새 팀원이 openssl 명령부터 찾아야 하므로 그냥 만들어 줌.
+  // 메모리에만 두므로 서버를 다시 띄우면 기존 토큰은 못 쓰게 됨(개발이라 무해함).
+  //
+  // 운영에서는 generate-key-if-missing 이 false 라 절대 여기로 오지 않음.
+  // 운영에서 키가 없으면 기동이 실패해야 함 - 껐다 켤 때마다 전원이 로그아웃되고,
+  // 서버를 여러 대 띄우면 서로 남의 토큰을 못 읽게 되기 때문임
+  private void generateTemporaryKeyPair() throws GeneralSecurityException {
+    KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+    generator.initialize(2048);
+    KeyPair pair = generator.generateKeyPair();
+
+    this.privateKey = pair.getPrivate();
+    this.publicKey = pair.getPublic();
   }
 
   // 설정에 PEM 본문이 들어 있으면 그걸 쓰고, 비어 있으면 경로에서 파일을 읽음

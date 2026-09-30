@@ -19,6 +19,11 @@ public class JwtConfig {
   // 비어 있지 않으면 위 경로보다 이쪽이 우선함
   private String privateKey;
   private String publicKey;
+
+  // 키가 없을 때 임시로 한 쌍 만들어 쓸지 여부. 개발 프로필에서만 true
+  // 저장소를 새로 받은 사람은 키 파일이 없으므로(.gitignore 대상) 그냥 기동되게 하려는 것임
+  // 운영은 false 여야 함. 재시작마다 키가 바뀌면 전원이 로그아웃됨
+  private boolean generateKeyIfMissing = false;
   private long accessTokenExpiration;
   private long refreshTokenExpiration;
 }
