@@ -16,7 +16,6 @@
 
 **문서**
 - [docs/architecture.md](docs/architecture.md) — 기술 스택과 디렉터리 구조
-- [docs/backend-code-guide.md](docs/backend-code-guide.md) — 백엔드 코드 안내 (계층 구조, 클래스별 상세, 호출 흐름)
 - [docs/deployment.md](docs/deployment.md) — 실행·배포 설정 (로컬 준비, Vercel·Render·Neon)
 - [docs/project-rule.md](docs/project-rule.md) — 협업 규칙
 

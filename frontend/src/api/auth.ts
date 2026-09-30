@@ -25,9 +25,14 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return data;
 }
 
-// 로그아웃임. 바디는 없고 Authorization: Bearer {accessToken} 이 필요함 (interceptor 가 자동으로 넣어 줌)
-export async function logout(): Promise<LogoutResponse> {
-  const { data } = await axiosInstance.post<LogoutResponse>('/auth/logout');
+// 로그아웃임. Authorization: Bearer {accessToken} 이 필요함 (interceptor 가 자동으로 넣어 줌)
+//
+// 리프레시 토큰을 같이 보내면 지금 쓰는 기기만 로그아웃함.
+// 안 보내면 서버가 이 계정의 모든 기기를 로그아웃함
+export async function logout(refreshToken?: string | null): Promise<LogoutResponse> {
+  const { data } = await axiosInstance.post<LogoutResponse>('/auth/logout', {
+    refreshToken: refreshToken ?? undefined,
+  });
   return data;
 }
 

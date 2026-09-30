@@ -74,7 +74,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("회원가입에 성공하면 201 을 돌려줌")
   void 회원가입_성공() throws Exception {
-    when(authService.signup(any())).thenReturn(SignupResponse.of(user()));
+    when(authService.signup(any(), anyString())).thenReturn(SignupResponse.of(user()));
 
     mockMvc
         .perform(
@@ -95,13 +95,14 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.message").isNotEmpty());
 
-    verify(authService, org.mockito.Mockito.never()).signup(any());
+    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
   }
 
   @Test
   @DisplayName("이메일이 겹치면 409 로 나감")
   void 회원가입_중복() throws Exception {
-    when(authService.signup(any())).thenThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL));
+    when(authService.signup(any(), anyString()))
+        .thenThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL));
 
     mockMvc
         .perform(
@@ -193,7 +194,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("로그아웃은 200 으로 나감")
   void 로그아웃() throws Exception {
-    when(authService.logout(anyInt())).thenReturn(LogoutResponse.of());
+    when(authService.logout(anyInt(), any())).thenReturn(LogoutResponse.of());
 
     mockMvc
         .perform(post("/api/auth/logout").contentType(MediaType.APPLICATION_JSON))

@@ -9,14 +9,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.test.context.ActiveProfiles;
 
 // JPA 관련 빈만 올림. 웹·시큐리티는 뜨지 않음
 //
 // 메서드 이름으로 만들어지는 쿼리(findByUser_Id 등)는 이름이 한 글자만 틀려도
 // 앱을 띄울 때 터진다. 그걸 여기서 미리 잡음
-// 실제 실행은 PostgreSQL 을 쓰고, 여기서만 인메모리 DB 를 씀 (src/test/resources/application-test.yml)
+// DB 는 실제 PostgreSQL 임(H2 아님). 그래서 db/migration 의 SQL 이 실제로 도는지,
+// 엔티티와 스키마가 맞는지까지 여기서 확인됨 (src/test/resources/application-test.yml)
 @DataJpaTest
+// 임베디드 DB 로 갈아치우지 않도록 막음. application-test.yml 의 PostgreSQL 을 그대로 씀
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @DisplayName("저장소")
 class RepositoryTest {
