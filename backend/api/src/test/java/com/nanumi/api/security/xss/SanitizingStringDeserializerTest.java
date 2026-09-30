@@ -1,0 +1,101 @@
+package com.nanumi.api.security.xss;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+// 검증기(@SafeText 등)보다 먼저 도는 자리라, 여기서 다듬고 나면 검증기는 깨끗한 값만 보게 됨
+@DisplayName("요청 문자열 다듬기")
+class SanitizingStringDeserializerTest {
+
+  private final SanitizingStringDeserializer sanitizer = new SanitizingStringDeserializer();
+
+  private String clean(String value) {
+    return sanitizer.sanitize(value, "nickname");
+  }
+
+  private String cleanPassword(String value) {
+    return sanitizer.sanitize(value, "password");
+  }
+
+  @Test
+  @DisplayName("평범한 값은 그대로 둠")
+  void 평범한_값() {
+    assertThat(clean("나눔이")).isEqualTo("나눔이");
+    assertThat(clean("Happy Apt 101")).isEqualTo("Happy Apt 101");
+  }
+
+  @Test
+  @DisplayName("null 은 null 로 돌려줌")
+  void null_값() {
+    assertThat(clean(null)).isNull();
+  }
+
+  @Test
+  @DisplayName("앞뒤 공백을 떼어 냄")
+  void 공백_제거() {
+    assertThat(clean("  나눔이  ")).isEqualTo("나눔이");
+  }
+
+  // "ａdmin" 처럼 전각 문자로 중복 닉네임 검사를 피해 가는 걸 막음
+  @Test
+  @DisplayName("전각 문자를 반각으로 맞춤(NFKC)")
+  void 전각_정규화() {
+    assertThat(clean("ａｄｍｉｎ")).isEqualTo("admin");
+    assertThat(clean("１２３")).isEqualTo("123");
+  }
+
+  @Test
+  @DisplayName("합성된 한글을 한 글자로 맞춤")
+  void 한글_정규화() {
+    // 'ㄱ' + 'ㅏ' 로 쪼개 적은 '가'
+    String decomposed = "가";
+    assertThat(clean(decomposed)).isEqualTo("가");
+  }
+
+  @Test
+  @DisplayName("보이지 않는 문자를 지움")
+  void 보이지_않는_문자() {
+    assertThat(clean("나눔" + (char) 0x200B + "이")).isEqualTo("나눔이");
+    assertThat(clean("나눔" + (char) 0x00AD + "이")).isEqualTo("나눔이");
+    assertThat(clean("나눔" + (char) 0x202E + "이")).isEqualTo("나눔이");
+    assertThat(clean((char) 0xFEFF + "나눔이")).isEqualTo("나눔이");
+    assertThat(clean("나눔" + (char) 0x2060 + "이")).isEqualTo("나눔이");
+  }
+
+  @Test
+  @DisplayName("제어문자를 지움")
+  void 제어문자() {
+    assertThat(clean("나눔\n이")).isEqualTo("나눔이");
+    assertThat(clean("나눔\t이")).isEqualTo("나눔이");
+    assertThat(clean("나눔\u0000이")).isEqualTo("나눔이");
+  }
+
+  // 비밀번호는 앞뒤 공백까지 그대로 둬야 회원이 정한 값과 어긋나지 않음
+  @Test
+  @DisplayName("비밀번호 칸은 앞뒤 공백을 남김")
+  void 비밀번호는_공백_유지() {
+    assertThat(cleanPassword("  Ab3!efgh  ")).isEqualTo("  Ab3!efgh  ");
+  }
+
+  @Test
+  @DisplayName("비밀번호 칸이라도 보이지 않는 문자는 지움")
+  void 비밀번호도_보이지_않는_문자는_제거() {
+    assertThat(cleanPassword("Ab3!" + (char) 0x200B + "efgh")).isEqualTo("Ab3!efgh");
+  }
+
+  @Test
+  @DisplayName("passwordConfirm 처럼 이름에 password 가 들어가면 비밀번호로 봄")
+  void 비밀번호_칸_판별() {
+    assertThat(sanitizer.sanitize("  값  ", "passwordConfirm")).isEqualTo("  값  ");
+    assertThat(sanitizer.sanitize("  값  ", "PASSWORD")).isEqualTo("  값  ");
+    assertThat(sanitizer.sanitize("  값  ", "email")).isEqualTo("값");
+  }
+
+  @Test
+  @DisplayName("칸 이름을 모르면 공백을 떼어 냄")
+  void 이름이_없으면_기본_처리() {
+    assertThat(sanitizer.sanitize("  값  ", null)).isEqualTo("값");
+  }
+}

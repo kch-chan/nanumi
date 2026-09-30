@@ -75,26 +75,59 @@ jobs:
       matrix:
         project: ${{ fromJson(needs.detect.outputs.matrix) }}
 
+    # 백엔드 테스트는 실제 PostgreSQL 에 붙음(H2 를 쓰지 않음).
+    # 그래야 db/migration 의 SQL 이 진짜로 도는지, 엔티티와 스키마가 맞는지 확인됨.
+    # 운영은 ddl-auto: validate 라서 어긋나면 "배포 기동 실패"로 처음 알게 되는데, 그 구멍을 여기서 막음
+    #
+    # node 잡에서도 같이 뜨지만 쓰지 않을 뿐이라 해로울 것은 없음
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: nanumi_test
+          POSTGRES_USER: abc
+          POSTGRES_PASSWORD: aadd123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U abc -d nanumi_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      - name: Setup pnpm
+        if: matrix.project.type == 'node'
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ matrix.project.dir }}/package.json
 
       - name: Setup Node
         if: matrix.project.type == 'node'
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.project.dir }}/pnpm-lock.yaml
 
       - name: React - Install & Lint
         if: matrix.project.type == 'node'
         working-directory: ${{ matrix.project.dir }}
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
           if grep -q '"lint"' package.json; then
-            npm run lint
+            pnpm run lint
           else
             echo "lint 스크립트 없음, skip"
+          fi
+          if grep -q '"test"' package.json; then
+            pnpm run test
+          else
+            echo "test 스크립트 없음, skip"
           fi
 
       - name: Setup Java (Maven)
@@ -104,9 +137,31 @@ jobs:
           java-version: 21
           distribution: temurin
 
+      # 시크릿이 실제로 등록돼 있는지만 확인함. 값은 찍지 않음
+      - name: GitHub Secrets 등록 확인
+        if: matrix.project.type == 'maven'
+        env:
+          PASSWORD_PEPPER: ${{ secrets.PASSWORD_PEPPER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+        run: |
+          for name in PASSWORD_PEPPER DB_PASSWORD JWT_PRIVATE_KEY JWT_PUBLIC_KEY; do
+            if [ -n "${!name}" ]; then
+              echo "  $name: 등록됨"
+            else
+              echo "  $name: 없음 (운영 배포 전에 넣어야 함)"
+            fi
+          done
+
       - name: Spring Boot (Maven) - Verify
         if: matrix.project.type == 'maven'
         working-directory: ${{ matrix.project.dir }}
+        env:
+          # 위 서비스 컨테이너를 가리킴. application-test.yml 의 기본값과 같지만 명시해 둠
+          TEST_DB_URL: jdbc:postgresql://127.0.0.1:5432/nanumi_test
+          TEST_DB_USERNAME: abc
+          TEST_DB_PASSWORD: aadd123
         run: |
           if [ -f "mvnw" ]; then
             chmod +x ./mvnw

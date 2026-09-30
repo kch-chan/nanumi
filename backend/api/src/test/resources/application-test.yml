@@ -1,0 +1,50 @@
+# 테스트 설정
+#
+# DB 는 인메모리(H2)가 아니라 실제 PostgreSQL 을 씀
+#   로컬: docker compose 로 띄운 컨테이너 (127.0.0.1:5432)
+#   CI  : 워크플로의 서비스 컨테이너
+#
+# H2 를 쓰지 않는 이유:
+#   db/migration 의 SQL 은 PostgreSQL 문법(GENERATED AS IDENTITY 등)이라 H2 에서 그대로 돌지 않음.
+#   그래서 H2 로 테스트하면 마이그레이션이 실제로 도는지, 엔티티와 스키마가 맞는지 확인할 수 없음.
+#   운영은 ddl-auto: validate 라서 어긋나면 "배포 기동 실패"로 처음 알게 됨. 그 구멍을 여기서 막음
+#
+# 개발용 DB(nanumi_dev)와 따로 nanumi_test 를 씀. 테스트가 개발 데이터를 건드리지 않게 하기 위함임
+# (docker-compose.yml 이 컨테이너를 만들 때 두 DB 를 함께 만듦)
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${TEST_DB_URL:jdbc:postgresql://127.0.0.1:5432/nanumi_test}
+    username: ${TEST_DB_USERNAME:abc}
+    password: ${TEST_DB_PASSWORD:aadd123}
+
+  # 마이그레이션을 켜 둠. 이게 실제로 돌아야 스키마가 만들어지고,
+  # 아래 validate 가 엔티티와 맞는지 확인해 줌
+  flyway:
+    enabled: true
+    # 테스트마다 스키마를 처음부터 다시 만듦.
+    # 마이그레이션을 고쳤을 때 체크섬이 어긋나 막히는 일을 피하고,
+    # V1 부터 순서대로 도는지도 매번 확인하게 됨
+    clean-disabled: false
+    clean-on-validation-error: true
+
+  jpa:
+    hibernate:
+      # 운영과 같은 값. 마이그레이션이 엔티티와 어긋나면 테스트가 바로 실패함
+      ddl-auto: validate
+    open-in-view: false
+
+jwt:
+  # 키 파일이 없으면 기동할 때 한 쌍 만들어 씀
+  # keys/*.pem 은 .gitignore 대상이라 CI 체크아웃에는 없음.
+  # 개발 프로필에만 켜 두면 로컬에서는 키가 있어서 통과하고 CI 에서만 깨짐
+  generate-key-if-missing: true
+
+nanumi:
+  security:
+    password:
+      # 테스트에서만 쓰는 pepper. 운영·개발 값과 달라도 됨(테스트마다 새로 해싱하므로)
+      # 다만 비어 있으면 NanumiPasswordProperties 가 기동을 막으므로 반드시 있어야 함
+      pepper: nanumi-test-pepper
+      # 해싱을 여러 번 하는 테스트가 있어서 반복 횟수를 낮춰 둠. 보안과 무관한 값임
+      iterations: 1000

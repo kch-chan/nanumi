@@ -56,7 +56,10 @@ logs/
 ### secret/환경변수 파일 ###
 .env
 .env.*
-!.env.example
 *.secret.yml
 application-secret.yml
 application-local.yml
+
+### 테스트 전용 키 (의미 없는 임시 키라 올려 둠) ###
+!src/test/resources/keys/private_key.pem
+!src/test/resources/keys/public_key.pem
