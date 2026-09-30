@@ -107,11 +107,41 @@ postgresql://nanumi_owner:비밀번호@ep-xxx.ap-southeast-1.aws.neon.tech/nanum
 | --- | --- |
 | `DB_URL` `DB_USERNAME` `DB_PASSWORD` | 위 3번의 Neon 정보 |
 | `PASSWORD_PEPPER` | 백업 파일의 pepper |
-| `JWT_PRIVATE_KEY` | 백업 파일의 개인키 (BEGIN/END 줄 포함 전체) |
-| `JWT_PUBLIC_KEY` | 백업 파일의 공개키 |
 | `CORS_ALLOWED_ORIGINS` | 아래 6번 참고 |
 
+### JWT 키는 Secret Files 로 넣습니다
+
+같은 **Environment** 화면 아래쪽 **Secret Files** → **+ Add Secret File** 에서 파일 두 개를 추가합니다. 여러 줄 값이라 환경 변수 칸에 붙여 넣으면 줄바꿈이 깨지기 쉽습니다.
+
+| Filename | Contents |
+| --- | --- |
+| `private_key.pem` | 백업 파일의 개인키 — `-----BEGIN` 부터 `-----END` 까지 전체 |
+| `public_key.pem` | 백업 파일의 공개키 — 전체 |
+
+Render 는 이 파일들을 `/etc/secrets/파일명` 에 둡니다. `render.yaml` 의 `JWT_PRIVATE_KEY_PATH` / `JWT_PUBLIC_KEY_PATH` 가 그 경로를 가리키고 있으니 따로 손댈 것이 없습니다. 파일명을 정확히 위와 같이 써야 합니다.
+
+> 환경 변수 `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY` 에 PEM 본문을 직접 넣어도 동작합니다. 본문이 있으면 경로보다 본문이 우선하므로 둘이 충돌하지 않습니다.
+
 `SPRING_PROFILES_ACTIVE=prod` 와 `FORWARD_HEADERS_STRATEGY=framework` 는 `render.yaml` 에 이미 있습니다.
+
+### 모노레포라서 경로 세 칸을 맞춰야 합니다
+
+**Settings** 화면의 세 칸입니다. Blueprint 로 만들지 않고 직접 서비스를 만들었다면 `render.yaml` 대신 이 값들이 쓰입니다.
+
+| 항목 | 값 |
+| --- | --- |
+| Root Directory | `backend/api` |
+| Dockerfile Path | `./Dockerfile` |
+| Docker Build Context Directory | `.` |
+
+**아래 두 칸은 Root Directory 기준입니다.** 여기에 `backend/api` 를 또 쓰면 경로가 두 번 붙어서 이런 오류가 납니다.
+
+```
+failed to read dockerfile: open Dockerfile: no such file or directory
+invalid local: lstat /opt/render/project/src/backend/api/backend: no such file or directory
+```
+
+로컬에서 `docker build -t nanumi/api:latest backend/api` 로 만드는 것과 같은 구조입니다.
 
 ### 왜 Render 가 PORT 를 정하는가
 
@@ -119,7 +149,11 @@ Render 는 자기가 정한 포트로 앱이 듣기를 요구합니다. `applica
 
 ### 헬스 체크
 
-`healthCheckPath: /actuator/health` 입니다. 기동에 실패한 이미지로 교체되는 것을 막아 줍니다. 이 경로만 인증 없이 열려 있고 상태값(`UP`)만 내려줍니다. `/actuator/env` 같은 다른 경로는 닫혀 있습니다(401).
+`healthCheckPath: /actuator/health/liveness` 입니다. 기동에 실패한 이미지로 교체되는 것을 막아 줍니다.
+
+`/actuator/health` 가 아니라 `liveness` 를 쓰는 이유가 있습니다. **전자는 DB 까지 확인합니다.** Neon 무료 등급은 유휴 시 컴퓨트를 중지하므로, 그동안 헬스 체크가 들어오면 `DOWN` 이 나오고 Render 가 멀쩡한 인스턴스를 재시작해 버립니다. `liveness` 는 앱이 살아 있는지만 봅니다.
+
+DB 까지 포함한 상태는 `/actuator/health` 로 따로 확인할 수 있습니다. 두 경로 모두 인증 없이 열려 있고 상태값만 내려줍니다. `/actuator/env` 같은 다른 경로는 닫혀 있습니다(401).
 
 ---
 
@@ -152,7 +186,7 @@ VITE_API_BASE_URL = https://nanumi-api.onrender.com/api
 닭과 달걀 문제라 양쪽이 배포된 뒤에 합니다. Render 의 `CORS_ALLOWED_ORIGINS` 에 Vercel 주소를 넣습니다.
 
 ```
-https://nanumi.vercel.app,https://*.vercel.app
+https://nanumi-neon.vercel.app,https://nanumi-neon-*.vercel.app
 ```
 
 **두 번째 항목이 중요합니다.** Vercel 은 브랜치·커밋마다 프리뷰 주소를 새로 만듭니다(`nanumi-git-feat-62-kch.vercel.app` 같은 형태). 정확히 일치하는 목록만 두면 프리뷰에서 API 호출이 전부 막힙니다. `setAllowedOriginPatterns` 를 쓰므로 와일드카드가 동작합니다.
@@ -160,7 +194,7 @@ https://nanumi.vercel.app,https://*.vercel.app
 실제 도메인을 붙이면 여기에 추가합니다.
 
 ```
-https://nanumi.vercel.app,https://*.vercel.app,https://nanumi.com,https://www.nanumi.com
+https://nanumi-neon.vercel.app,https://nanumi-neon-*.vercel.app,https://nanumi.com,https://www.nanumi.com
 ```
 
 `www.` 도 따로 적어야 합니다. CORS 는 출처를 정확히 비교하므로 `nanumi.com` 만 있으면 `www.` 는 막힙니다.
@@ -221,7 +255,9 @@ curl -s https://nanumi-api.onrender.com/actuator/health
 | 메시지 | 원인 |
 | --- | --- |
 | `pepper 가 비어 있음` / `치환되지 않은 자리표시자` | `PASSWORD_PEPPER` 가 없음 |
-| `class path resource [keys/private_key.pem] cannot be opened` | 운영인데 `JWT_PRIVATE_KEY` 가 없음 |
+| `class path resource [keys/private_key.pem] cannot be opened` | 운영인데 JWT 키가 없음 (Secret Files 확인) |
+| `/etc/secrets/private_key.pem (No such file or directory)` | Secret File 이름이 다름 |
+| 새로고침하면 로그아웃됨 | `VITE_API_BASE_URL` 이 없어 리프레시가 프런트 도메인으로 감 |
 | `Connection refused` (로컬) | `docker compose up -d` 를 안 했음 |
 | `The server does not support SSL` / 연결 거부 (운영) | `DB_URL` 에 `sslmode=require` 가 없음 |
 | `Schema validation: missing table` | 마이그레이션이 적용되지 않았음 |

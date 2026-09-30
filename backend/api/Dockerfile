@@ -39,6 +39,10 @@ COPY --from=build /build/target/*.jar app.jar
 # 비밀 아닌 값만 둠
 ENV SPRING_PROFILES_ACTIVE=prod
 
+# 컨테이너 기본 시간대는 UTC 임. LocalDateTime.now() 가 그 시간대를 따르므로
+# created_at, withdrawn_at, expiry_date 가 KST 기준 9시간 전으로 기록됨
+ENV TZ=Asia/Seoul
+
 EXPOSE 8080
 
 # exec 형식으로 써야 java 가 PID 1 이 되어 systemd/도커의 종료 신호를 직접 받음

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 // 나누미 전용 비밀번호 인코더임
 //
 // 저장 형식: $nanumi${버전}${반복횟수}$Base64(salt)$Base64(hash)
-// 예) $nanumi$1$210000$ES9dxu6QeMBGl8fA4kR6bw$Xo1r...  (기본값 기준 83자)
+// 예) $nanumi$1$100000$ES9dxu6QeMBGl8fA4kR6bw$Xo1r...  (기본값 기준 83자)
 //
 // - 비밀번호마다 salt 를 새로 뽑아서 같은 비밀번호라도 해시가 달라짐
 // - 서버만 아는 pepper 를 덧붙여서 DB 만 털려도 대입 공격이 어려움
@@ -162,7 +162,7 @@ public class NanumiPasswordEncoder implements PasswordEncoder { // 스프링 시
   private ParsedHash parse(String encodedPassword) {
     String[] parts = encodedPassword.split("\\" + SEPARATOR);
 
-    // "$nanumi$1$210000$salt$hash" 를 나누면 맨 앞이 빈 문자열이라 6조각이 나옴
+    // "$nanumi$1$100000$salt$hash" 를 나누면 맨 앞이 빈 문자열이라 6조각이 나옴
     if (parts.length != 6 || !parts[0].isEmpty() || !PREFIX.equals(parts[1])) {
       return null;
     }

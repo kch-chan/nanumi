@@ -18,14 +18,17 @@ import com.nanumi.api.dto.response.LoginResponse;
 import com.nanumi.api.dto.response.SignupResponse;
 import com.nanumi.api.dto.response.TokenResponse;
 import com.nanumi.api.entity.Account;
+import com.nanumi.api.entity.RefreshToken;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.repository.AccountRepository;
+import com.nanumi.api.repository.RefreshTokenRepository;
 import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
 import com.nanumi.api.security.LoginAttemptService;
+import com.nanumi.api.security.SignupAttemptService;
 import com.nanumi.api.security.password.NanumiPasswordEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -50,13 +53,15 @@ class AuthServiceTest {
 
   private static final String CLIENT_IP = "127.0.0.1";
   private static final String RAW_PASSWORD = "Ab3!efgh";
-  private static final String STORED_HASH = "$nanumi$1$210000$salt$hash";
+  private static final String STORED_HASH = "$nanumi$1$100000$salt$hash";
 
   @Mock private UserRepository userRepository;
   @Mock private AccountRepository accountRepository;
   @Mock private NanumiPasswordEncoder passwordEncoder;
   @Mock private JwtTokenProvider jwtTokenProvider;
   @Mock private LoginAttemptService loginAttemptService;
+  @Mock private SignupAttemptService signupAttemptService;
+  @Mock private RefreshTokenRepository refreshTokenRepository;
 
   private AuthService authService;
 
@@ -68,7 +73,9 @@ class AuthServiceTest {
             accountRepository,
             passwordEncoder,
             jwtTokenProvider,
-            loginAttemptService);
+            loginAttemptService,
+            signupAttemptService,
+            refreshTokenRepository);
   }
 
   // 로그인 응답 시간을 맞추려고 서비스가 미리 만들어 두는 해시임. 필요한 테스트에서만 부름
@@ -84,7 +91,21 @@ class AuthServiceTest {
   }
 
   private Account accountOf(User user) {
-    return Account.builder().user(user).email("nanumi@example.com").password(STORED_HASH).build();
+    Account account =
+        Account.builder().user(user).email("nanumi@example.com").password(STORED_HASH).build();
+    // 토큰 행이 계정 번호로 묶이므로 번호가 있어야 함
+    ReflectionTestUtils.setField(account, "id", 7);
+    return account;
+  }
+
+  // DB 에 담겨 있는 리프레시 토큰 행을 흉내 냄
+  private RefreshToken storedToken(Account account, String rawToken, LocalDateTime expiresAt)
+      throws Exception {
+    return RefreshToken.builder()
+        .account(account)
+        .tokenHash(sha256Hex(rawToken))
+        .expiresAt(expiresAt)
+        .build();
   }
 
   private static String sha256Hex(String value) throws Exception {
@@ -105,7 +126,7 @@ class AuthServiceTest {
     void 이메일_중복() {
       when(accountRepository.existsByEmail("nanumi@example.com")).thenReturn(true);
 
-      assertThatThrownBy(() -> authService.signup(request("101", "1502")))
+      assertThatThrownBy(() -> authService.signup(request("101", "1502"), CLIENT_IP))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
@@ -119,7 +140,7 @@ class AuthServiceTest {
       when(accountRepository.existsByEmail(anyString())).thenReturn(false);
       when(userRepository.existsByNicknameIgnoreCase("나눔이")).thenReturn(true);
 
-      assertThatThrownBy(() -> authService.signup(request("101", "1502")))
+      assertThatThrownBy(() -> authService.signup(request("101", "1502"), CLIENT_IP))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.DUPLICATE_NICKNAME);
@@ -133,7 +154,7 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      authService.signup(request("101", "1502"));
+      authService.signup(request("101", "1502"), CLIENT_IP);
 
       ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
       verify(accountRepository).save(captor.capture());
@@ -148,7 +169,7 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      authService.signup(request("", "   "));
+      authService.signup(request("", "   "), CLIENT_IP);
 
       ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
       verify(userRepository).save(captor.capture());
@@ -163,7 +184,7 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      SignupResponse response = authService.signup(request("101", "1502"));
+      SignupResponse response = authService.signup(request("101", "1502"), CLIENT_IP);
 
       ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
       verify(accountRepository).save(captor.capture());
@@ -271,7 +292,9 @@ class AuthServiceTest {
 
       authService.login(request, CLIENT_IP);
 
-      assertThat(account.getRefreshTokenHash())
+      ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
+      verify(refreshTokenRepository).save(captor.capture());
+      assertThat(captor.getValue().getTokenHash())
           .isEqualTo(sha256Hex("refresh-token"))
           .isNotEqualTo("refresh-token")
           .hasSize(64);
@@ -324,45 +347,52 @@ class AuthServiceTest {
           .isEqualTo(ErrorCode.USER_NOT_FOUND);
     }
 
+    // 기한이 지난 행은 지우고 만료로 알림
     @Test
-    @DisplayName("로그아웃한 계정이면 만료로 처리함")
-    void 담아_둔_토큰_없음() {
+    @DisplayName("담아 둔 토큰의 기한이 지났으면 만료로 처리하고 지움")
+    void 담아_둔_토큰_만료() throws Exception {
       Account account = accountOf(userWithId(1));
+      RefreshToken expired = storedToken(account, "token", LocalDateTime.now().minusSeconds(1));
       when(jwtTokenProvider.resolveUserId(anyString(), eq(TokenType.REFRESH)))
           .thenReturn(Optional.of(1));
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(refreshTokenRepository.findByTokenHash(sha256Hex("token")))
+          .thenReturn(Optional.of(expired));
 
       assertThatThrownBy(() -> authService.refresh(new RefreshRequest("token")))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.EXPIRED_REFRESH_TOKEN);
+
+      verify(refreshTokenRepository).delete(expired);
     }
 
     // 이미 한 번 회전돼서 버려진 토큰을 뒤늦게 쓰는 상황일 수 있음
     // 진짜 주인이 쓰던 토큰까지 같이 끊고 다시 로그인하게 해야 함
     @Test
-    @DisplayName("담아 둔 것과 다른 토큰이 오면 세션을 통째로 끊음")
+    @DisplayName("담아 둔 행이 없는 토큰이 오면 그 계정의 모든 기기를 끊음")
     void 재사용_감지() throws Exception {
       Account account = accountOf(userWithId(1));
-      account.updateRefreshToken(sha256Hex("원래-토큰"), LocalDateTime.now().plusDays(1));
       when(jwtTokenProvider.resolveUserId("다른-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1));
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(refreshTokenRepository.findByTokenHash(sha256Hex("다른-토큰"))).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> authService.refresh(new RefreshRequest("다른-토큰")))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.INVALID_TOKEN);
 
-      assertThat(account.hasRefreshToken()).isFalse();
+      verify(refreshTokenRepository).deleteByAccount_Id(account.getId());
     }
 
     @Test
-    @DisplayName("성공하면 토큰 두 개를 새로 내주고 담아 둔 해시도 바뀜")
+    @DisplayName("성공하면 쓰인 토큰을 버리고 새 토큰을 담음")
     void 재발급_성공() throws Exception {
       Account account = accountOf(userWithId(1));
-      account.updateRefreshToken(sha256Hex("옛-토큰"), LocalDateTime.now().plusDays(1));
+      RefreshToken old = storedToken(account, "옛-토큰", LocalDateTime.now().plusDays(1));
       when(jwtTokenProvider.resolveUserId("옛-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1));
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(refreshTokenRepository.findByTokenHash(sha256Hex("옛-토큰"))).thenReturn(Optional.of(old));
       when(jwtTokenProvider.createAccessToken(1)).thenReturn("새-액세스");
       when(jwtTokenProvider.createRefreshToken(1)).thenReturn("새-리프레시");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
@@ -371,7 +401,33 @@ class AuthServiceTest {
 
       assertThat(response.accessToken()).isEqualTo("새-액세스");
       assertThat(response.refreshToken()).isEqualTo("새-리프레시");
-      assertThat(account.getRefreshTokenHash()).isEqualTo(sha256Hex("새-리프레시"));
+
+      // 쓰인 행은 버림(회전)
+      verify(refreshTokenRepository).delete(old);
+
+      ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
+      verify(refreshTokenRepository).save(captor.capture());
+      assertThat(captor.getValue().getTokenHash()).isEqualTo(sha256Hex("새-리프레시"));
+    }
+
+    // 기기마다 행이 따로 있어서, 다른 기기에서 로그인해도 이 기기의 토큰은 살아 있어야 함
+    @Test
+    @DisplayName("다른 기기의 토큰은 건드리지 않음")
+    void 다른_기기_토큰_유지() throws Exception {
+      Account account = accountOf(userWithId(1));
+      RefreshToken phone = storedToken(account, "폰-토큰", LocalDateTime.now().plusDays(1));
+      when(jwtTokenProvider.resolveUserId("폰-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(refreshTokenRepository.findByTokenHash(sha256Hex("폰-토큰")))
+          .thenReturn(Optional.of(phone));
+      when(jwtTokenProvider.createAccessToken(1)).thenReturn("새-액세스");
+      when(jwtTokenProvider.createRefreshToken(1)).thenReturn("새-리프레시");
+      when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
+
+      authService.refresh(new RefreshRequest("폰-토큰"));
+
+      // 계정 단위로 싹 지우는 일은 재사용이 감지됐을 때만 해야 함
+      verify(refreshTokenRepository, never()).deleteByAccount_Id(account.getId());
     }
   }
 
@@ -379,16 +435,31 @@ class AuthServiceTest {
   @DisplayName("로그아웃과 탈퇴")
   class LogoutAndWithdraw {
 
+    // 토큰을 안 보내면 이 계정의 모든 기기를 끊음
     @Test
-    @DisplayName("로그아웃하면 담아 둔 리프레시 토큰을 지움")
-    void 로그아웃() throws Exception {
+    @DisplayName("토큰 없이 로그아웃하면 모든 기기를 끊음")
+    void 로그아웃_전체() {
       Account account = accountOf(userWithId(1));
-      account.updateRefreshToken(sha256Hex("토큰"), LocalDateTime.now().plusDays(1));
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
 
-      authService.logout(1);
+      authService.logout(1, null);
 
-      assertThat(account.hasRefreshToken()).isFalse();
+      verify(refreshTokenRepository).deleteByAccount_Id(account.getId());
+    }
+
+    @Test
+    @DisplayName("토큰을 보내면 그 기기만 끊음")
+    void 로그아웃_기기_하나() throws Exception {
+      Account account = accountOf(userWithId(1));
+      RefreshToken phone = storedToken(account, "폰-토큰", LocalDateTime.now().plusDays(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(refreshTokenRepository.findByTokenHash(sha256Hex("폰-토큰")))
+          .thenReturn(Optional.of(phone));
+
+      authService.logout(1, "폰-토큰");
+
+      verify(refreshTokenRepository).delete(phone);
+      verify(refreshTokenRepository, never()).deleteByAccount_Id(account.getId());
     }
 
     @Test
@@ -406,10 +477,9 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("탈퇴하면 상태가 바뀌고 리프레시 토큰도 지워짐")
-    void 탈퇴_성공() throws Exception {
+    void 탈퇴_성공() {
       User user = userWithId(1);
       Account account = accountOf(user);
-      account.updateRefreshToken(sha256Hex("토큰"), LocalDateTime.now().plusDays(1));
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
 
@@ -417,7 +487,8 @@ class AuthServiceTest {
 
       assertThat(user.isWithdrawn()).isTrue();
       assertThat(user.getWithdrawalReason()).isEqualTo("이사 갑니다");
-      assertThat(account.hasRefreshToken()).isFalse();
+      // 탈퇴는 기기를 가리지 않고 전부 끊음
+      verify(refreshTokenRepository).deleteByAccount_Id(account.getId());
     }
 
     @Test
