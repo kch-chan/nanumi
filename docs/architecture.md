@@ -24,7 +24,7 @@
 - spring-boot-starter-web: rest api
 - spring-boot-starter-security: 인증
 - spring-boot-starter-data-jpa: DB 연동
-- h2: 인메모리 DB
+- MySQL: 개발·운영 모두 사용
 - spring-boot-starter-validation: NotBlank, Size 입력 검증
 - jjwt (api/impl/jackson): JWT 생성/검증
 - lombok: Getter, Builder 등 보일러플레이트 제거

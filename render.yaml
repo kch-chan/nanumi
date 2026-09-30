@@ -1,0 +1,78 @@
+# Render 배포 설계도(Blueprint) — 백엔드만
+#
+# Render 대시보드에서 "New > Blueprint" 를 고르고 이 저장소를 연결하면 됨.
+#
+# 구성:
+#   프런트엔드  Vercel        (frontend/vercel.json)
+#   백엔드      Render        (이 파일)
+#   데이터베이스 Neon          (Render 가 만들지 않음. 접속 정보를 아래에 넣음)
+#
+# 셋으로 나눈 이유:
+#   Vercel 은 정적 사이트 배포가 빠르고 미리보기 배포를 브랜치마다 만들어 줌
+#   Neon 은 Postgres 무료 등급이 있고 Render 의 DB 기간 제한에 묶이지 않음
+#
+# 비밀값은 이 파일에 적지 않음. 여기 적으면 git 에 올라감.
+# sync: false 인 값은 Render 가 대시보드에서 직접 넣으라고 물어봄.
+services:
+  - type: web
+    name: nanumi-api
+    runtime: docker
+    dockerfilePath: ./backend/api/Dockerfile
+    # Dockerfile 안에서 COPY 하는 경로의 기준점. 이게 없으면 mvnw 를 못 찾음
+    dockerContext: ./backend/api
+    plan: free
+    region: singapore
+    branch: main
+    # 기동에 실패한 이미지로 교체되지 않게 함
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # ----- Neon 접속 정보 -----
+      # Neon 대시보드의 연결 문자열을 JDBC 형식으로 바꿔서 넣음
+      #   Neon 이 주는 형태: postgresql://계정:비번@ep-xxx.ap-southeast-1.aws.neon.tech/nanumi?sslmode=require
+      #   DB_URL 에 넣을 형태: jdbc:postgresql://ep-xxx.ap-southeast-1.aws.neon.tech/nanumi?sslmode=require
+      #   (계정과 비밀번호는 URL 에서 빼고 아래 두 칸에 따로 넣음)
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # ----- 비밀값 -----
+      # 백업해 둔 "나누미-운영-비밀값.txt" 의 값을 넣음
+      - key: PASSWORD_PEPPER
+        sync: false
+
+      # ----- JWT 키 -----
+      # 키는 이미지에 들어 있지 않음(.dockerignore). 바깥에서 넣어야 함.
+      # 방법 두 가지가 있고 아래 경로 방식을 권함:
+      #
+      #  1) Secret Files (권장)
+      #     Render 의 Environment > Secret Files 에 파일 두 개를 추가함
+      #       private_key.pem / public_key.pem
+      #     여러 줄 값을 그대로 붙여 넣을 수 있어서 줄바꿈이 깨지지 않음.
+      #     아래 경로 설정이 그 파일을 읽음
+      #
+      #  2) 환경 변수에 PEM 본문 직접
+      #     JWT_PRIVATE_KEY / JWT_PUBLIC_KEY 를 추가해 PEM 전체를 붙여 넣음
+      #     본문이 들어 있으면 아래 경로보다 그쪽이 우선함
+      #     (JwtTokenProvider 가 본문 -> 경로 순으로 확인함)
+      - key: JWT_PRIVATE_KEY_PATH
+        value: file:/etc/secrets/private_key.pem
+      - key: JWT_PUBLIC_KEY_PATH
+        value: file:/etc/secrets/public_key.pem
+
+      # ----- 프런트 주소 -----
+      # Vercel 주소를 넣음. 쉼표로 여러 개 가능
+      # 나중에 nanumi.com 을 붙이면 여기에 같이 추가해야 함
+      #   예: https://nanumi.vercel.app,https://nanumi.com,https://www.nanumi.com
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      # Render 는 프록시 뒤에 있으므로 원래 접속자 IP 를 헤더로 받음
+      # 이게 없으면 로그인 시도 제한이 모든 요청을 같은 IP 로 보게 됨
+      - key: FORWARD_HEADERS_STRATEGY
+        value: framework

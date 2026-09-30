@@ -1,0 +1,162 @@
+# ---------------------------------------------------------------------------
+# 나누미 API 설정
+#
+# 파일 하나에 프로필별 설정을 --- 로 나눠서 담음(스프링 부트의 다중 문서 방식).
+# 위쪽은 모든 프로필에 공통으로 적용되고, 아래 문서들은 해당 프로필일 때만 덧씌워짐.
+#
+# 값이 들어오는 경로:
+#   개발  - 아래 기본값 그대로 씀. 내 PC 만 다른 값은 .env.dev 에 적음(git 에 안 올라감)
+#   CI    - GitHub Secrets 가 러너의 환경 변수로 들어옴
+#   운영  - 배포 워크플로가 GitHub Secrets 를 서버 환경 변수로 넣음
+#
+# 개발용 기본값은 비밀이 아님(내 PC 의 버리는 DB 라서).
+# 진짜 비밀값은 운영 문서에만 있고 기본값이 없음 -> 없으면 기동이 실패함.
+# 자세한 내용은 docs/deployment.md 참고.
+# ---------------------------------------------------------------------------
+spring:
+  application:
+    name: api
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # 스키마 변경 이력. db/migration 의 V숫자__이름.sql 을 순서대로 적용함
+  # 이미 적용한 파일은 flyway_schema_history 테이블에 기록되어 다시 실행되지 않음
+  flyway:
+    enabled: true
+
+jwt:
+  # 유효 기간 설정. 세션/쿠키 방식이 아니라 jwt 방식이기 때문에 서버에서 자체 폐기 위함
+  access-token-expiration: 900000 # 15분
+  refresh-token-expiration: 1209600000 # 14일
+
+  # 키를 넣는 방법은 두 가지임
+  #  1) 파일 경로 (아래 두 줄) - 로컬 개발에서 씀
+  #  2) PEM 본문 직접 (JWT_PRIVATE_KEY/JWT_PUBLIC_KEY) - CI·운영에서 씀
+  #     GitHub Secrets 는 파일이 아니라 문자열만 주므로 운영은 이쪽을 씀
+  # 본문이 비어 있지 않으면 본문이 우선하고, 비어 있으면 경로를 읽음
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private_key.pem}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public_key.pem}
+  private-key: ${JWT_PRIVATE_KEY:}
+  public-key: ${JWT_PUBLIC_KEY:}
+
+nanumi:
+  security:
+    password:
+      # PBKDF2 반복 횟수. 해시에 같이 적히므로 나중에 올려도 기존 계정은 그대로 로그인됨
+      iterations: ${PASSWORD_ITERATIONS:210000}
+    cors:
+      # 브라우저에서 이 API 를 직접 부를 수 있는 출처
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # health 만 엶. 나머지(env, beans 등)는 설정값과 구조를 노출하므로 닫아 둠
+        include: health
+  endpoint:
+    health:
+      # UP/DOWN 만 내려줌. DB 주소 같은 상세는 감춤
+      show-details: never
+
+# 참고: /actuator/health 는 SecurityConfig 에서 인증 없이 열어 둠
+
+server:
+  # 플랫폼이 포트를 정해 주는 환경(Render, Heroku 등)에서는 PORT 환경 변수를 따라야 함
+  # 그런 환경에서 8080 을 고정하면 바깥에서 접속이 안 됨
+  port: ${PORT:8080}
+
+  # 오류 응답에 예외 이름이나 스택이 섞여 나가지 않도록 막음
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
+
+  # X-Forwarded-For 를 믿을지 정함
+  # 프록시가 바깥에서 들어온 헤더를 지워 준다는 보장이 없으면 켜면 안 됨
+  # 켜는 순간 헤더만 바꿔 가며 로그인 잠금을 통과할 수 있게 됨
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+
+---
+# ===== 개발 =================================================================
+# 리뷰 받는 용
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import:
+      - optional:file:./.env.dev[.properties]
+      - optional:file:./backend/api/.env.dev[.properties]
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://127.0.0.1:5432/nanumi_dev}
+    username: ${DB_USERNAME:abc}
+    password: ${DB_PASSWORD:aadd123}
+
+  jpa:
+    hibernate:
+      # 운영과 같은 값을 씀. 스키마는 Flyway 가 db/migration 의 SQL 로 만듦
+      # update 로 두면 Hibernate 가 테이블을 몰래 고쳐서, 마이그레이션을 안 쓴 걸
+      # 운영 배포 때 처음 알게 됨. validate 면 개발 단계에서 바로 막힘
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+nanumi:
+  security:
+    password:
+      pepper: ${PASSWORD_PEPPER:nanumi-local-dev-pepper}
+
+jwt:
+  # 키 파일이 없으면 기동할 때 한 쌍 만들어 씀
+  # 저장소를 새로 받으면 keys/*.pem 이 없음(.gitignore 대상)
+  # 재시작하면 토큰이 무효가 되지만 개발에서는 다시 로그인하면 되므로 무해함
+  generate-key-if-missing: true
+
+logging:
+  level:
+    com.nanumi: debug
+
+---
+# ===== 운영 =================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - optional:file:./.env.prod[.properties]
+      - optional:file:./backend/api/.env.prod[.properties]
+
+  datasource:
+    # Neon 이 주는 주소를 JDBC 형식으로 바꿔서 넣음
+    #   Neon 화면:  postgresql://계정:비번@ep-xxx.ap-southeast-1.aws.neon.tech/nanumi?sslmode=require
+    #   여기 넣을 값: jdbc:postgresql://ep-xxx.ap-southeast-1.aws.neon.tech/nanumi?sslmode=require
+    # 계정과 비밀번호는 URL 에서 빼서 아래 두 줄로 따로 넣음
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # 운영에서는 스키마를 건드리지 않고, 엔티티와 다르면 기동을 거부함
+      ddl-auto: validate
+    show-sql: false
+
+nanumi:
+  security:
+    password:
+      # 기본값 없음. 없는 상태로 뜨면 기존 비밀번호가 전부 무효가 되므로
+      # NanumiPasswordProperties 가 기동을 막음
+      pepper: ${PASSWORD_PEPPER}

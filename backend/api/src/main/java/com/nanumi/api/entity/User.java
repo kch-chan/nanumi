@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,17 +20,21 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname"))
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserEntity {
+public class User {
+
+  public static final int WITHDRAWAL_REASON_LENGTH = 255;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private int id;
 
-  @Column(nullable = false, unique = true, length = 20)
+  @Column(nullable = false, length = 20)
   private String nickname;
 
   @Column(nullable = false, length = 100)
@@ -42,8 +47,17 @@ public class UserEntity {
   private String ho;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column(nullable = false, length = 20)
   private Role role = Role.USER;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private Status status = Status.ACTIVE;
+
+  @Column private LocalDateTime withdrawnAt;
+
+  @Column(length = WITHDRAWAL_REASON_LENGTH)
+  private String withdrawalReason;
 
   @CreatedDate
   @Column(nullable = false, updatable = false)
@@ -54,7 +68,7 @@ public class UserEntity {
   private LocalDateTime updatedAt;
 
   @Builder
-  public UserEntity(String nickname, String aptName, String dong, String ho) {
+  public User(String nickname, String aptName, String dong, String ho) {
     this.nickname = nickname;
     this.aptName = aptName;
     this.dong = dong;
@@ -64,6 +78,21 @@ public class UserEntity {
   public enum Role {
     USER,
     ADMIN
+  }
+
+  public enum Status {
+    ACTIVE,
+    WITHDRAWN
+  }
+
+  public boolean isWithdrawn() {
+    return this.status == Status.WITHDRAWN;
+  }
+
+  public void withdraw(String withdrawalReason) {
+    this.status = Status.WITHDRAWN;
+    this.withdrawnAt = LocalDateTime.now();
+    this.withdrawalReason = withdrawalReason;
   }
 
   public void changeNickname(String nickname) {
@@ -78,7 +107,7 @@ public class UserEntity {
     this.dong = dong;
   }
 
-  public void changHo(String ho) {
+  public void changeHo(String ho) {
     this.ho = ho;
   }
 }
