@@ -1,6 +1,6 @@
 # 테스트 전용 설정
 #
-# 실제 실행은 MySQL 만 씀. 여기 H2 를 두는 이유는 CI 에 DB 를 띄우지 않고도
+# 실제 실행은 PostgreSQL 만 씀. 여기 H2 를 두는 이유는 CI 에 DB 를 띄우지 않고도
 # 파생 쿼리(findByUser_Id 처럼 메서드 이름으로 만들어지는 쿼리)가 성립하는지 확인하기 위함임
 # MODE=PostgreSQL 로 PostgreSQL 문법을 흉내 냄
 spring:

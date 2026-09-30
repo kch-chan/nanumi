@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 //
 // 메서드 이름으로 만들어지는 쿼리(findByUser_Id 등)는 이름이 한 글자만 틀려도
 // 앱을 띄울 때 터진다. 그걸 여기서 미리 잡음
-// 실제 실행은 MySQL 을 쓰고, 여기서만 인메모리 DB 를 씀 (src/test/resources/application-test.yml)
+// 실제 실행은 PostgreSQL 을 쓰고, 여기서만 인메모리 DB 를 씀 (src/test/resources/application-test.yml)
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("저장소")

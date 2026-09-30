@@ -17,61 +17,45 @@
 **문서**
 - [docs/architecture.md](docs/architecture.md) — 기술 스택과 디렉터리 구조
 - [docs/backend-code-guide.md](docs/backend-code-guide.md) — 백엔드 코드 안내 (계층 구조, 클래스별 상세, 호출 흐름)
-- [docs/deployment.md](docs/deployment.md) — 설정 파일 구조, MySQL 준비, GitHub 시크릿 공유 방법
+- [docs/deployment.md](docs/deployment.md) — 실행·배포 설정 (로컬 준비, Vercel·Render·Neon)
 - [docs/project-rule.md](docs/project-rule.md) — 협업 규칙
 
 
 ## Getting Started
 
 **실행 방법**
-- 서비스 링크 접속하고 싶은 경우
-실제 서비스 URL: `추후 URL 참고`
 
-- 코드 실행하고 싶은 경우
-1. 프로젝트 다운로드 후 터미널 2개 이상 준비
-2. 각각의 터미널에 backend 실행 코드와 frontend 실행 코드 입력
+- 배포된 서비스를 보고 싶은 경우
 
-**backend 실행 전 준비 (최초 1회)**
-
-DB 는 MySQL 을 씁니다. 개발도 운영도 같습니다. 먼저 DB 와 계정을 만들어 주세요.
-
-```sql
-CREATE DATABASE nanumi_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE USER 'nanumi'@'localhost' IDENTIFIED BY '여기에_비밀번호';
-GRANT ALL PRIVILEGES ON nanumi_dev.* TO 'nanumi'@'localhost';
-```
-
-그리고 설정 파일 두 개를 만듭니다. 둘 다 저장소에 올라가지 않습니다.
-
-| 파일 | 담는 것 |
+| | 주소 |
 | --- | --- |
-| `backend/api/.env.dev` | DB 주소·계정명·CORS 출처 같은 환경 값 |
-| `settings.xml` (저장소 루트) | DB 비밀번호·pepper·JWT 키 같은 비밀값 |
+| 프런트엔드 | https://nanumi-neon.vercel.app |
+| 백엔드 | https://nanumi-api.onrender.com |
 
-항목별 설명과 GitHub 시크릿 공유 방법은 **[docs/deployment.md](docs/deployment.md)** 에 있습니다.
+> 무료 등급이라 한동안 접속이 없으면 서버가 잠듭니다. 첫 요청이 1분 가까이 걸릴 수 있습니다.
 
-JWT 서명에 쓰는 RSA 키도 직접 만들어야 합니다.
-(만들지 않고 실행하면 `JwtTokenProvider` 에서 바로 실패합니다.)
+- 코드를 직접 실행하고 싶은 경우
+
+**준비물은 Docker 하나입니다.** DB 를 설치하거나 계정을 만들거나 키를 만들 필요가 없습니다.
 
 ```bash
-cd "$(git rev-parse --show-toplevel)/backend/api"
-mkdir -p keys
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/private_key.pem
-openssl rsa -pubout -in keys/private_key.pem -out keys/public_key.pem
+docker compose up -d
 ```
 
-> 키 위치는 `.env.dev` 의 `JWT_PRIVATE_KEY_PATH` / `JWT_PUBLIC_KEY_PATH` 로 지정합니다.
-> 파일 대신 PEM 본문을 `settings.xml` 에 직접 넣어도 됩니다(CI·컨테이너에서 편함).
+PostgreSQL 컨테이너가 뜨면서 `nanumi_dev` DB 와 계정까지 만들어 줍니다.
+테이블은 백엔드가 뜰 때 Flyway 가 `backend/api/src/main/resources/db/migration` 의 SQL 로 만듭니다.
+
+`application.yml` 의 개발용 기본값이 컨테이너 설정과 같으므로 `.env.dev` 도 필요 없습니다.
+JWT 키도 개발 프로필에서는 기동할 때 자동으로 만들어 씁니다.
 
 **backend 실행 코드**
 ```bash
-cd "$(git rev-parse --show-toplevel)"
-cd backend/api
-./mvnw -s ../../settings.xml spring-boot:run
+cd "$(git rev-parse --show-toplevel)/backend/api"
+./mvnw spring-boot:run
 ```
 
-> `-s` 는 비밀값이 든 `settings.xml` 위치를 알려 주는 것입니다.
-> `~/.m2/settings.xml` 에 두면 `-s` 없이 `./mvnw spring-boot:run` 만 해도 됩니다.
+> 터미널 두 개가 필요합니다. 백엔드와 프런트엔드를 각각 띄웁니다.
+> 더 자세한 내용과 배포 설정은 **[docs/deployment.md](docs/deployment.md)** 에 있습니다.
 
 **frontend 실행 코드**
 ```bash

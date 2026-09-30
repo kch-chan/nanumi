@@ -62,7 +62,9 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 // Render 가 기동 여부를 확인하는 경로. 상태값만 내려주고 상세는 감춰 둠
-                auth.requestMatchers("/actuator/health")
+                // 하위 경로(/actuator/health/liveness)까지 열어야 함.
+                // 배포 플랫폼은 DB 상태가 섞이지 않는 liveness 를 확인 경로로 씀
+                auth.requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
                     .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/refresh")
                     .permitAll()

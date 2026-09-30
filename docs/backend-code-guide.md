@@ -107,7 +107,7 @@ flowchart TD
     subgraph Data["저장 계층"]
         Repo["UserRepository<br/>AccountRepository"]
         Ent["User / Account"]
-        DB[("H2 / MySQL")]
+        DB[("H2 / PostgreSQL")]
     end
 
     Handler["GlobalExceptionHandler"]
@@ -1012,7 +1012,7 @@ private static String hashRefreshToken(String refreshToken) {
 > **비밀번호는 PBKDF2 21만 번인데 리프레시 토큰은 SHA-256 한 번인 이유**
 > PBKDF2 를 여러 번 돌리는 건 **사람이 만든 짧고 추측 가능한 비밀번호**를 대입 공격으로부터 지키기 위해서입니다. 리프레시 토큰은 서버가 만든 길고 무작위한 JWT 라서 애초에 추측이 불가능합니다. 여기에 21만 번을 돌리는 건 순수한 낭비입니다.
 >
-> 부수 효과로 **길이 문제도 풀렸습니다.** 예전에는 토큰 원문을 `varchar(1000)` 에 담았는데, MySQL utf8mb4 기준 1000자 = 4000바이트라 InnoDB 인덱스 상한(3072바이트)을 넘겨서 유니크 인덱스를 못 만듭니다. SHA-256 은 항상 64자입니다.
+> 부수 효과로 **길이 문제도 풀렸습니다.** 예전에는 토큰 원문을 `varchar(1000)` 에 담았는데, 토큰 원문은 길이가 정해지지 않아 유니크 인덱스를 걸기에 부적절합니다. SHA-256 은 항상 64자입니다.
 
 ---
 
@@ -1414,7 +1414,7 @@ private final PasswordEncoder passwordEncoder;   // 타입은 인터페이스
 
 | | `dev` | `prod` |
 | --- | --- | --- |
-| DB | H2 인메모리 | MySQL (`DB_URL` 등) |
+| DB | H2 인메모리 | PostgreSQL (`DB_URL` 등) |
 | `ddl-auto` | `update` (엔티티 보고 자동 변경) | `validate` (**맞는지 확인만**) |
 | H2 콘솔 | 열림 (`/h2-console`) | 없음 |
 | JWT 키 | `classpath:keys/*.pem` | `JWT_PRIVATE_KEY_PATH` 등 |

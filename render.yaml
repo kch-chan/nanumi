@@ -24,7 +24,9 @@ services:
     region: singapore
     branch: main
     # 기동에 실패한 이미지로 교체되지 않게 함
-    healthCheckPath: /actuator/health
+    # /actuator/health 는 DB 까지 확인해서 Neon 이 자면 DOWN 이 됨.
+    # 그러면 Render 가 멀쩡한 인스턴스를 재시작함. liveness 는 앱만 확인함
+    healthCheckPath: /actuator/health/liveness
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -68,7 +70,9 @@ services:
       # ----- 프런트 주소 -----
       # Vercel 주소를 넣음. 쉼표로 여러 개 가능
       # 나중에 nanumi.com 을 붙이면 여기에 같이 추가해야 함
-      #   예: https://nanumi.vercel.app,https://nanumi.com,https://www.nanumi.com
+      #   예: https://nanumi-neon.vercel.app,https://nanumi-neon-*.vercel.app,https://nanumi.com
+      # https://*.vercel.app 처럼 넓게 두지 말 것. vercel.app 에 배포한 누구나
+      # 브라우저에서 이 API 를 부를 수 있게 되어 화이트리스트 의미가 사라짐
       - key: CORS_ALLOWED_ORIGINS
         sync: false
 
