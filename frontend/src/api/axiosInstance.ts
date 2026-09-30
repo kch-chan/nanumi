@@ -13,8 +13,13 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
   retried?: boolean;
 }
 
+// 개발에서는 Vite 프록시가 /api 를 백엔드로 넘겨 주므로 상대 경로면 됨.
+// 배포하면 프런트와 백엔드가 서로 다른 도메인이라 상대 경로가 정적 사이트를 가리켜 404 가 남.
+// 그래서 배포할 때는 VITE_API_BASE_URL 에 백엔드 주소를 넣어야 함
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+
 const axiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 

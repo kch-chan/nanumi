@@ -61,7 +61,10 @@ public class SecurityConfig {
         // 인증 필요 없는 경로 지정
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/refresh")
+                // Render 가 기동 여부를 확인하는 경로. 상태값만 내려주고 상세는 감춰 둠
+                auth.requestMatchers("/actuator/health")
+                    .permitAll()
+                    .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/refresh")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
@@ -102,7 +105,10 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
     CorsConfiguration configuration = new CorsConfiguration();
     // 어떤 출처에서 요청할 수 있는지, 허용할 http method, 허용할 header, 쿠키 허용 여부
-    configuration.setAllowedOrigins(List.copyOf(corsProperties.getAllowedOrigins()));
+    // setAllowedOrigins 가 아니라 Patterns 를 씀
+    // Vercel 은 커밋마다 프리뷰 주소를 새로 만들어서 정확히 일치하는 목록으로는 다 막힘
+    // Patterns 는 https://nanumi-*.vercel.app 처럼 와일드카드를 받고, 정확한 주소도 그대로 동작함
+    configuration.setAllowedOriginPatterns(List.copyOf(corsProperties.getAllowedOrigins()));
     configuration.setAllowedMethods(List.copyOf(corsProperties.getAllowedMethods()));
     configuration.setAllowedHeaders(List.copyOf(corsProperties.getAllowedHeaders()));
     configuration.setAllowCredentials(corsProperties.isAllowCredentials());

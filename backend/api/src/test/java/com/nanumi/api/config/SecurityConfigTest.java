@@ -33,8 +33,28 @@ class SecurityConfigTest {
         corsFor("/api/auth/login", List.of("http://localhost:5173", "https://nanumi.com"));
 
     assertThat(configuration).isNotNull();
-    assertThat(configuration.getAllowedOrigins())
+    // 정확히 일치하는 목록이 아니라 패턴으로 담김(와일드카드를 쓰기 위해)
+    // 그래서 getAllowedOrigins() 가 아니라 getAllowedOriginPatterns() 를 봐야 함
+    assertThat(configuration.getAllowedOriginPatterns())
         .containsExactly("http://localhost:5173", "https://nanumi.com");
+    assertThat(configuration.getAllowedOrigins()).isNull();
+  }
+
+  // Vercel 은 커밋마다 프리뷰 주소를 새로 만듦
+  // 와일드카드가 실제로 매칭되지 않으면 프리뷰에서 API 호출이 전부 막힘
+  @Test
+  @DisplayName("와일드카드 출처가 프리뷰 주소를 허용함")
+  void 와일드카드_출처() {
+    CorsConfiguration configuration =
+        corsFor("/api/auth/login", List.of("https://nanumi.vercel.app", "https://*.vercel.app"));
+
+    assertThat(configuration).isNotNull();
+    assertThat(configuration.checkOrigin("https://nanumi.vercel.app"))
+        .isEqualTo("https://nanumi.vercel.app");
+    assertThat(configuration.checkOrigin("https://nanumi-git-feat-62-kch.vercel.app"))
+        .isEqualTo("https://nanumi-git-feat-62-kch.vercel.app");
+    // 관계없는 도메인은 여전히 막혀야 함
+    assertThat(configuration.checkOrigin("https://evil.example.com")).isNull();
   }
 
   @Test
@@ -61,6 +81,7 @@ class SecurityConfigTest {
   void 출처가_비면_빈_목록() {
     CorsConfiguration configuration = corsFor("/api/auth/login", List.of());
 
-    assertThat(configuration.getAllowedOrigins()).isEmpty();
+    assertThat(configuration.getAllowedOriginPatterns()).isEmpty();
+    assertThat(configuration.checkOrigin("https://nanumi.vercel.app")).isNull();
   }
 }
