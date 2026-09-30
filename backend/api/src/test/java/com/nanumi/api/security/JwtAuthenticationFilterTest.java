@@ -59,12 +59,12 @@ class JwtAuthenticationFilterTest {
   void 인증_성공() throws Exception {
     request.addHeader("Authorization", "Bearer good-token");
     when(jwtTokenProvider.resolveUserId("good-token", TokenType.ACCESS))
-        .thenReturn(Optional.of(42L));
+        .thenReturn(Optional.of(42));
 
     filter.doFilter(request, response, chain);
 
     assertThat(currentAuthentication()).isNotNull();
-    assertThat(currentAuthentication().getPrincipal()).isEqualTo(42L);
+    assertThat(currentAuthentication().getPrincipal()).isEqualTo(42);
     assertThat(currentAuthentication().getAuthorities()).isEmpty();
   }
 
@@ -122,8 +122,7 @@ class JwtAuthenticationFilterTest {
   @DisplayName("인증에 성공해도 다음 필터로 넘김")
   void 다음_필터로_넘김() throws Exception {
     request.addHeader("Authorization", "Bearer good-token");
-    when(jwtTokenProvider.resolveUserId("good-token", TokenType.ACCESS))
-        .thenReturn(Optional.of(1L));
+    when(jwtTokenProvider.resolveUserId("good-token", TokenType.ACCESS)).thenReturn(Optional.of(1));
     FilterChain spyChain = new MockFilterChain();
 
     filter.doFilter(request, response, spyChain);

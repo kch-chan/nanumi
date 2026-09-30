@@ -1,7 +1,7 @@
 package com.nanumi.api.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -68,7 +68,7 @@ class AuthControllerTest {
       """;
 
   private UserResponse user() {
-    return new UserResponse(1L, "나눔이", "행복아파트", "101", "1502", "USER");
+    return new UserResponse(1, "나눔이", "행복아파트", "101", "1502", "USER");
   }
 
   @Test
@@ -193,7 +193,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("로그아웃은 200 으로 나감")
   void 로그아웃() throws Exception {
-    when(authService.logout(anyLong())).thenReturn(LogoutResponse.of());
+    when(authService.logout(anyInt())).thenReturn(LogoutResponse.of());
 
     mockMvc
         .perform(post("/api/auth/logout").contentType(MediaType.APPLICATION_JSON))

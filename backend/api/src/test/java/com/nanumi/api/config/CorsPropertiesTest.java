@@ -50,10 +50,10 @@ class CorsPropertiesTest {
   void 값_덮어쓰기() {
     CorsProperties properties = new CorsProperties();
 
-    properties.setAllowedOrigins(List.of("https://nanumi.example.com"));
+    properties.setAllowedOrigins(List.of("https://nanumi.com"));
     properties.setMaxAge(60L);
 
-    assertThat(properties.getAllowedOrigins()).containsExactly("https://nanumi.example.com");
+    assertThat(properties.getAllowedOrigins()).containsExactly("https://nanumi.com");
     assertThat(properties.getMaxAge()).isEqualTo(60L);
   }
 }

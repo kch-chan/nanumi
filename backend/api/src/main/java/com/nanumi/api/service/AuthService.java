@@ -138,7 +138,7 @@ public class AuthService {
   // (이 메서드는 검사를 다 통과한 뒤에야 값을 바꾸므로 롤백하지 않아도 남는 부작용이 없음)
   @Transactional(noRollbackFor = CustomException.class)
   public TokenResponse refresh(RefreshRequest request) {
-    Long userId =
+    Integer userId =
         jwtTokenProvider
             .resolveUserId(request.refreshToken(), TokenType.REFRESH)
             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
@@ -172,7 +172,7 @@ public class AuthService {
     return TokenResponse.of(accessToken, refreshToken);
   }
 
-  public LogoutResponse logout(Long userId) {
+  public LogoutResponse logout(Integer userId) {
     Account account =
         accountEntityRepository
             .findByUser_Id(userId)
@@ -183,7 +183,7 @@ public class AuthService {
     return LogoutResponse.of();
   }
 
-  public WithdrawalResponse withdraw(Long userId, WithdrawalRequest request) {
+  public WithdrawalResponse withdraw(Integer userId, WithdrawalRequest request) {
     Account account =
         accountEntityRepository
             .findByUser_Id(userId)

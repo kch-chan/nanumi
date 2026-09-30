@@ -42,7 +42,8 @@ class RepositoryTest {
   @Test
   @DisplayName("저장하면 번호와 생성 시각이 채워짐")
   void 저장() {
-    assertThat(user.getId()).isNotNull();
+    // id 가 int 라 null 검사는 뜻이 없음. 실제로 번호가 부여됐는지를 봄
+    assertThat(user.getId()).isPositive();
     assertThat(user.getCreatedAt()).isNotNull();
     assertThat(user.getUpdatedAt()).isNotNull();
   }
@@ -58,7 +59,7 @@ class RepositoryTest {
   @DisplayName("회원 번호로 계정을 찾음")
   void 회원_번호로_찾기() {
     assertThat(accountRepository.findByUser_Id(user.getId())).isPresent();
-    assertThat(accountRepository.findByUser_Id(999L)).isEmpty();
+    assertThat(accountRepository.findByUser_Id(999)).isEmpty();
   }
 
   @Test

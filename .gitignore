@@ -1,12 +1,2 @@
-### 비밀값 ###
-# Maven settings.xml 에 DB 비밀번호·pepper·JWT 키가 들어감. 절대 커밋하지 않음
-settings.xml
-**/settings.xml
-
-### 환경 변수 파일 ###
 .env
-.env.*
-
-### OS ###
-Thumbs.db
-.DS_Store
+.env*

@@ -28,12 +28,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
-  // 탈퇴 사유 칸의 길이임. WithdrawalRequest 의 @Size 와 맞춰 둠
   public static final int WITHDRAWAL_REASON_LENGTH = 255;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private int id;
 
   @Column(nullable = false, length = 20)
   private String nickname;
@@ -57,8 +56,6 @@ public class User {
 
   @Column private LocalDateTime withdrawnAt;
 
-  // 개인정보 수집·이용 동의에서 선택 항목으로 받기로 한 값임
-  // 서비스 품질 개선과 이용 현황 분석에만 쓰고, 탈퇴 후 30일이 지나면 파기해야 함
   @Column(length = WITHDRAWAL_REASON_LENGTH)
   private String withdrawalReason;
 

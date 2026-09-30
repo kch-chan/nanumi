@@ -42,9 +42,9 @@ class ApiApplicationTest {
   void 토큰_발급() {
     JwtTokenProvider provider = context.getBean(JwtTokenProvider.class);
 
-    String token = provider.createAccessToken(1L);
+    String token = provider.createAccessToken(1);
 
-    assertThat(provider.resolveUserId(token, JwtTokenProvider.TokenType.ACCESS)).contains(1L);
+    assertThat(provider.resolveUserId(token, JwtTokenProvider.TokenType.ACCESS)).contains(1);
   }
 
   @Test

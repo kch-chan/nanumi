@@ -117,21 +117,22 @@ jobs:
           java-version: 21
           distribution: temurin
 
-      # 저장소에 없는 settings.xml(비밀값)을 시크릿에서 복원함
-      # 시크릿이 없으면 이 단계는 건너뛰고, pom.xml 의 개발용 기본값으로 빌드됨
-      - name: Maven settings.xml 복원
+      # 시크릿이 실제로 등록돼 있는지만 확인함. 값은 찍지 않음
+      - name: GitHub Secrets 등록 확인
         if: matrix.project.type == 'maven'
         env:
-          MAVEN_SETTINGS: ${{ secrets.MAVEN_SETTINGS }}
+          PASSWORD_PEPPER: ${{ secrets.PASSWORD_PEPPER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
         run: |
-          if [ -z "$MAVEN_SETTINGS" ]; then
-            echo "MAVEN_SETTINGS 시크릿이 없음. pom.xml 의 개발용 기본값으로 진행함"
-            exit 0
-          fi
-          mkdir -p ~/.m2
-          printf '%s' "$MAVEN_SETTINGS" > ~/.m2/settings.xml
-          chmod 600 ~/.m2/settings.xml
-          echo "settings.xml 복원 완료 ($(wc -c < ~/.m2/settings.xml) bytes)"
+          for name in PASSWORD_PEPPER DB_PASSWORD JWT_PRIVATE_KEY JWT_PUBLIC_KEY; do
+            if [ -n "${!name}" ]; then
+              echo "  $name: 등록됨"
+            else
+              echo "  $name: 없음 (운영 배포 전에 넣어야 함)"
+            fi
+          done
 
       - name: Spring Boot (Maven) - Verify
         if: matrix.project.type == 'maven'

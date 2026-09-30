@@ -30,11 +30,11 @@ class SecurityConfigTest {
   @DisplayName("설정한 출처가 그대로 정책에 들어감")
   void 출처_반영() {
     CorsConfiguration configuration =
-        corsFor("/api/auth/login", List.of("http://localhost:5173", "https://nanumi.example.com"));
+        corsFor("/api/auth/login", List.of("http://localhost:5173", "https://nanumi.com"));
 
     assertThat(configuration).isNotNull();
     assertThat(configuration.getAllowedOrigins())
-        .containsExactly("http://localhost:5173", "https://nanumi.example.com");
+        .containsExactly("http://localhost:5173", "https://nanumi.com");
   }
 
   @Test
