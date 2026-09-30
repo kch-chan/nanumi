@@ -99,7 +99,11 @@ describe('axiosInstance', () => {
     const response = await axiosInstance.get('/users/me');
 
     expect(response.data).toEqual({ ok: true });
-    expect(post).toHaveBeenCalledWith('/api/auth/refresh', { refreshToken: 'refresh' });
+    // 개발 환경에서는 baseURL 이 /api 라서 이 값이 상대 경로와 글자까지 같음.
+    // 그래서 이 단정만으로는 아래 '절대 주소' 테스트가 잡는 버그를 못 잡음
+    expect(post).toHaveBeenCalledWith(`${axiosInstance.defaults.baseURL}/auth/refresh`, {
+      refreshToken: 'refresh',
+    });
     expect(seen[1].authorization).toBe('Bearer new');
     expect(useAuthStore.getState().accessToken).toBe('new');
     expect(useAuthStore.getState().refreshToken).toBe('new-refresh');
@@ -164,6 +168,57 @@ describe('axiosInstance', () => {
 
     expect(post).not.toHaveBeenCalled();
     expect(useAuthStore.getState().isLoggedIn).toBe(false);
+  });
+
+  // 리프레시만 baseURL 을 타지 않아서 배포 환경에서 재발급이 100% 실패한 적이 있음.
+  // 요청이 백엔드가 아니라 프런트 도메인으로 가서 405 가 났고, 액세스 토큰은
+  // localStorage 에 남기지 않으므로 새로고침 한 번에 로그아웃됐음.
+  // 개발 환경에서는 baseURL 이 /api 라 상대 경로와 구분되지 않으므로,
+  // 배포와 같은 절대 주소를 넣은 새 인스턴스로 확인함
+  it('배포 설정(절대 주소)에서도 리프레시가 백엔드로 간다', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.test/api');
+    vi.resetModules();
+
+    const fresh = (await import('../axiosInstance')).default;
+    const store = (await import('../../stores/authStore')).useAuthStore;
+    store.getState().setAuth({ accessToken: 'old', refreshToken: 'refresh', user });
+
+    const post = vi
+      .spyOn(axios, 'post')
+      .mockResolvedValue({ data: { accessToken: 'new', refreshToken: 'new-refresh' } });
+
+    let first = true;
+    fresh.defaults.adapter = async (config) => {
+      if (first) {
+        first = false;
+        const error = new AxiosError('실패', undefined, config as never);
+        error.response = {
+          data: undefined,
+          status: 401,
+          statusText: '',
+          headers: new AxiosHeaders(),
+          config: config as never,
+        };
+        throw error;
+      }
+      return {
+        data: { ok: true },
+        status: 200,
+        statusText: 'OK',
+        headers: new AxiosHeaders(),
+        config: config as never,
+      };
+    };
+
+    await fresh.get('/users/me');
+
+    expect(post).toHaveBeenCalledWith('https://api.example.test/api/auth/refresh', {
+      refreshToken: 'refresh',
+    });
+
+    delete fresh.defaults.adapter;
+    vi.unstubAllEnvs();
+    vi.resetModules();
   });
 
   it('401 이 아닌 오류는 그대로 올려 보낸다', async () => {

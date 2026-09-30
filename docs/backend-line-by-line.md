@@ -1,3 +1,10 @@
+> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
 # 나누미 백엔드 코드 한 줄씩 읽기
 
 > **이 문서는 누구를 위한 것인가**
@@ -14,7 +21,14 @@
 
 ---
 
-## 목차
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 목차
 
 - [0. 먼저 알아야 할 단어](#0-먼저-알아야-할-단어)
 - [1. 전체 지도](#1-전체-지도)
@@ -45,11 +59,25 @@
 
 ---
 
-## 0. 먼저 알아야 할 단어
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0. 먼저 알아야 할 단어
 
 여기 나오는 단어를 모르면 3장이 외국어처럼 보입니다. **한 번 훑고 넘어갔다가, 막힐 때 돌아오세요.**
 
-### 0-1. 서버와 API
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-1. 서버와 API
 
 | 단어 | 쉽게 말하면 |
 |---|---|
@@ -68,7 +96,14 @@
 { "email": "test@a.com", "password": "nanumi1234!" }
 ```
 
-### 0-2. 자바 문법 최소한
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-2. 자바 문법 최소한
 
 | 단어 | 쉽게 말하면 |
 |---|---|
@@ -95,7 +130,14 @@ auth -> auth.anyRequest().authenticated()
 
 **메서드 참조(`::`)** 는 람다를 더 짧게 쓴 것입니다. `FieldError::getDefaultMessage` 는 `x -> x.getDefaultMessage()` 와 같습니다.
 
-### 0-3. 스프링 부트
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-3. 스프링 부트
 
 **스프링 부트**는 서버를 만들 때 반복되는 일을 대신 해 주는 도구 모음입니다.
 
@@ -128,7 +170,14 @@ public class AuthService {
 }
 ```
 
-### 0-4. 롬복(Lombok)
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-4. 롬복(Lombok)
 
 자바는 똑같은 코드를 많이 적어야 해서, **롬복**이 그걸 대신 만들어 줍니다. 컴파일할 때 코드가 생겨나므로, 소스에는 안 보이지만 실제로는 있습니다.
 
@@ -148,7 +197,14 @@ public class AuthService {
 > private final BCryptPasswordEncoder legacy = new BCryptPasswordEncoder(); // 이미 채워짐 → 제외
 > ```
 
-### 0-5. 데이터베이스와 JPA
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-5. 데이터베이스와 JPA
 
 | 단어 | 쉽게 말하면 |
 |---|---|
@@ -164,7 +220,14 @@ public class AuthService {
 
 > **변경 감지는 입문자가 가장 많이 놀라는 부분입니다.** 이 프로젝트 곳곳에서 `save()` 없이 값만 바꾸는데 DB 에 반영됩니다. [6장 FAQ](#6-입문자가-자주-막히는-질문)에서 다시 설명합니다.
 
-### 0-6. 보안 단어
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 0-6. 보안 단어
 
 | 단어 | 쉽게 말하면 |
 |---|---|
@@ -181,9 +244,23 @@ public class AuthService {
 
 ---
 
-## 1. 전체 지도
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-### 1-1. 이 서버가 하는 일
+# 1. 전체 지도
+
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 1-1. 이 서버가 하는 일
 
 지금 구현된 것은 **회원 기능 다섯 개**뿐입니다.
 
@@ -195,7 +272,14 @@ public class AuthService {
 | `POST /api/auth/logout` | 로그아웃 | ✅ |
 | `POST /api/auth/withdrawal` | 회원탈퇴 | ✅ |
 
-### 1-2. 폴더 구조
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 1-2. 폴더 구조
 
 ```
 backend/api/src/main/java/com/nanumi/api/
@@ -245,7 +329,14 @@ backend/api/src/main/java/com/nanumi/api/
     └── GlobalExceptionHandler.java  예외를 JSON 응답으로 바꿈
 ```
 
-### 1-3. 왜 이렇게 나누나
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 1-3. 왜 이렇게 나누나
 
 한 파일에 다 적으면 안 되나요? — **됩니다. 처음엔 돌아갑니다.** 그런데 곧 이런 일이 생깁니다.
 
@@ -267,7 +358,14 @@ backend/api/src/main/java/com/nanumi/api/
 
 ---
 
-## 2. 요청 한 번이 지나가는 길
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 2. 요청 한 번이 지나가는 길
 
 `POST /api/auth/login` 을 예로, 요청이 지나가는 순서입니다.
 
@@ -311,7 +409,14 @@ LoginResponse  →  JSON  →  브라우저
 { "status": 401, "message": "이메일 또는 비밀번호가 올바르지 않습니다." }
 ```
 
-### 2-1. 어디서 무엇이 걸러지나
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 2-1. 어디서 무엇이 걸러지나
 
 | 단계 | 거르는 것 | 못 걸러서 통과하면 |
 |---|---|---|
@@ -325,9 +430,23 @@ LoginResponse  →  JSON  →  브라우저
 **같은 것을 여러 번 막습니다.** 한 겹이 뚫려도 다음 겹이 막게 하려는 것이고, 이걸 다층 방어(defense in depth)라고 부릅니다.
 
 ---
-## 3. 파일을 한 줄씩
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-### 3-1. `ApiApplication.java` — 프로그램의 시작점
+# 3. 파일을 한 줄씩
+
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-1. `ApiApplication.java` — 프로그램의 시작점
 
 전체 14줄. 자바 프로그램은 `main` 메서드에서 시작하는데, 그 `main` 이 여기 있습니다.
 
@@ -366,7 +485,14 @@ public class ApiApplication {
 
 ---
 
-### 3-2. `JwtConfig.java` — 설정값을 담는 그릇
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-2. `JwtConfig.java` — 설정값을 담는 그릇
 
 `application.yml` 에 적어 둔 값을 자바에서 꺼내 쓰기 위한 클래스입니다.
 
@@ -398,7 +524,14 @@ public class JwtConfig {
 
 ---
 
-### 3-3. `CorsProperties.java` — 어느 사이트에서 부를 수 있나
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-3. `CorsProperties.java` — 어느 사이트에서 부를 수 있나
 
 ```java
 @Getter
@@ -432,7 +565,14 @@ public class CorsProperties {
 
 ---
 
-### 3-4. `JacksonConfig.java` — JSON 처리기에 부품 끼우기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-4. `JacksonConfig.java` — JSON 처리기에 부품 끼우기
 
 ```java
 @Configuration                                                      // (1)
@@ -458,11 +598,25 @@ public class JacksonConfig {
 
 ---
 
-### 3-5. `SecurityConfig.java` — 보안 규칙 조립
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-5. `SecurityConfig.java` — 보안 규칙 조립
 
 **이 프로젝트에서 가장 중요한 설정 파일**입니다. "어떤 요청을 통과시킬지, 어떤 검문소를 세울지"를 전부 여기서 정합니다.
 
-#### 맨 위 상수
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 맨 위 상수
 
 ```java
 @Configuration
@@ -483,7 +637,14 @@ public class SecurityConfig {
 3. **Permissions-Policy** — 위치·카메라·마이크 같은 브라우저 기능을 전부 끕니다. 쓸 일이 없으니 닫아 둡니다.
 4. **HSTS 기간** — 1년(31,536,000초). 브라우저에게 "앞으로 1년간 이 사이트는 무조건 HTTPS 로만 접속해라"라고 알립니다. `31_536_000L` 의 밑줄은 **자릿수 구분용**이고 값에는 영향이 없습니다. 끝의 `L` 은 "이 숫자는 `long` 타입"이라는 표시입니다.
 
-#### 필터 체인 ①: H2 콘솔 (개발 전용)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 필터 체인 ①: H2 콘솔 (개발 전용)
 
 ```java
   @Bean
@@ -509,7 +670,14 @@ public class SecurityConfig {
 
 > **왜 체인을 나눴나** — `frameOptions` 를 푸는 건 클릭재킹(다른 사이트가 우리 화면을 투명하게 덮어씌워 클릭을 가로채는 공격)에 열리는 일입니다. 아래 API 체인에 같이 넣었다면 **운영에서도 풀려 버립니다.** 그래서 체인을 아예 분리하고, 개발 프로필에서만 만들어지게 했습니다.
 
-#### 필터 체인 ②: API 본체
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 필터 체인 ②: API 본체
 
 ```java
   @Bean
@@ -597,7 +765,14 @@ public class SecurityConfig {
 
 12. **우리 문지기를 줄에 끼워 넣습니다.** 스프링 시큐리티는 여러 필터가 **줄 서서** 차례로 도는 구조인데, `UsernamePasswordAuthenticationFilter`(아이디/비번 폼 로그인 담당) **앞에** 우리 JWT 필터를 세웁니다. 그래야 권한 검사가 일어나기 전에 "누구인지"가 정해집니다.
 
-#### CORS 설정 만들기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# CORS 설정 만들기
 
 ```java
   @Bean
@@ -619,7 +794,14 @@ public class SecurityConfig {
 2. **`isAllowCredentials`** — `boolean` 필드의 getter 는 `get` 이 아니라 **`is`** 로 시작합니다. 자바의 관례입니다.
 3. **`/api/**`** — 이 설정을 적용할 주소 범위. `**` 는 "그 아래 전부".
 
-#### 오류를 직접 쓰는 메서드
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 오류를 직접 쓰는 메서드
 
 ```java
   private static void writeError(HttpServletResponse response, ErrorCode errorCode)
@@ -644,9 +826,23 @@ public class SecurityConfig {
 
 ---
 
-### 3-6. `JwtTokenProvider.java` — 출입증 발급기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### JWT 가 뭔가요
+# 3-6. `JwtTokenProvider.java` — 출입증 발급기
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# JWT 가 뭔가요
 
 점 두 개로 나뉜 **긴 문자열**입니다.
 
@@ -661,7 +857,14 @@ eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxIiwianRpIjoiYWJj...,.Xk3jQm9...
 
 **내용은 암호화돼 있지 않습니다.** 누구나 읽을 수 있습니다. 하지만 **고치면 서명이 안 맞아서** 서버가 바로 거부합니다. 그러므로 토큰에 비밀을 담으면 안 됩니다.
 
-#### 클래스 선언
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 클래스 선언
 
 ```java
 @Component
@@ -684,7 +887,14 @@ public class JwtTokenProvider {
 3. **파일을 읽는 도구.** `classpath:` 로 시작하는 프로젝트 내부 경로와 `file:` 로 시작하는 실제 파일 경로를 **같은 방식으로** 읽을 수 있습니다. 개발은 `classpath:`, 운영은 `file:` 을 쓰므로 유용합니다.
 4. **개인키와 공개키.** `@PostConstruct` 에서 채우기 때문에 `final` 이 아닙니다.
 
-#### 키를 왜 두 개 쓰나 (RS256)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 키를 왜 두 개 쓰나 (RS256)
 
 | | 개인키 (private) | 공개키 (public) |
 |---|---|---|
@@ -694,7 +904,14 @@ public class JwtTokenProvider {
 
 열쇠 하나로 만들고 확인하는 방식(HS256)도 있지만, 그러면 **검증만 하는 서버에도 위조할 수 있는 열쇠를 줘야** 합니다. 나중에 서비스를 여러 개로 나눌 때 문제가 되므로 처음부터 키를 나눠 뒀습니다.
 
-#### 시작할 때 키 읽기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 시작할 때 키 읽기
 
 ```java
   @PostConstruct
@@ -707,7 +924,14 @@ public class JwtTokenProvider {
 **서버가 뜰 때 딱 한 번** 읽습니다. 토큰을 만들 때마다 파일을 읽으면 느리기 때문입니다.
 그리고 키 파일이 없거나 깨져 있으면 **서버가 아예 안 뜹니다.** 운영 중에 발견하는 것보다 시작할 때 터지는 게 낫습니다(fail fast).
 
-#### 토큰 만들기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 토큰 만들기
 
 ```java
   public String createAccessToken(Long userId) {
@@ -747,7 +971,14 @@ public class JwtTokenProvider {
 8. **서명** — 개인키로 도장을 찍습니다. 이 한 줄 때문에 위조가 불가능해집니다.
 9. **`compact()`** — 최종 문자열로 만듭니다.
 
-#### 토큰 읽고 확인하기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 토큰 읽고 확인하기
 
 ```java
   public Optional<Long> resolveUserId(String token, TokenType expectedType) {   // (1)
@@ -791,7 +1022,14 @@ public class JwtTokenProvider {
 한 줄에 네 단계가 이어져 있습니다: 파서 준비 → **공개키로 검증하라고 지정** → 파서 완성 → **서명된 토큰으로 해석** → 내용 꺼내기.
 `parseSignedClaims` 라는 이름이 핵심입니다. 서명을 확인하지 않고 내용만 꺼내는 메서드도 있는데, 그걸 쓰면 **누구나 위조한 토큰이 통과**합니다.
 
-#### PEM 키 파일 읽기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# PEM 키 파일 읽기
 
 ```java
   private PrivateKey readPrivateKey(String location) throws IOException, GeneralSecurityException {
@@ -835,7 +1073,14 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...
 3. **`\\s`** 는 "공백 문자"(스페이스·줄바꿈·탭)를 뜻하는 정규식입니다. 전부 지워서 Base64 글자만 남깁니다.
    > 자바 문자열에서 역슬래시를 쓰려면 `\\` 로 두 번 적어야 합니다.
 
-#### 토큰 종류 enum
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 토큰 종류 enum
 
 ```java
   public enum TokenType {
@@ -861,7 +1106,14 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...
 
 ---
 
-### 3-7. `JwtAuthenticationFilter.java` — 요청마다 서 있는 문지기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-7. `JwtAuthenticationFilter.java` — 요청마다 서 있는 문지기
 
 48줄짜리 작은 클래스인데, **모든 요청이 여기를 지나갑니다.**
 
@@ -883,7 +1135,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {       // (1)
 
 > 이 클래스에는 `@Component` 가 없습니다. `SecurityConfig` 에서 `new JwtAuthenticationFilter(...)` 로 직접 만들기 때문입니다. 빈으로 만들면 시큐리티 체인 바깥에서도 자동 등록돼 두 번 도는 문제가 생길 수 있어, 필요한 곳에서만 만들어 끼웁니다.
 
-#### 실제 동작
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 실제 동작
 
 ```java
   @Override                                                               // (1)
@@ -920,7 +1179,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {       // (1)
 >
 > **역할을 나눈 이유**: 이 필터가 직접 막으면, `/api/auth/login` 처럼 토큰이 없어야 정상인 주소까지 막아 버립니다. "신원 확인"과 "출입 허가"를 분리한 것입니다.
 
-#### 헤더에서 토큰 꺼내기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 헤더에서 토큰 꺼내기
 
 ```java
   private String resolveToken(HttpServletRequest request) {
@@ -937,7 +1203,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {       // (1)
 3. 헤더가 없거나 형식이 다르면 `null`. 그러면 위의 `resolveUserId` 가 빈 결과를 돌려줍니다.
 
 ---
-### 3-8. `NanumiPasswordProperties.java` — 해시 설정값
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-8. `NanumiPasswordProperties.java` — 해시 설정값
 
 ```java
 @Getter
@@ -967,9 +1240,23 @@ nanumi:
 
 ---
 
-### 3-9. `NanumiPasswordEncoder.java` — 비밀번호 해싱
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 왜 이 클래스가 필요한가
+# 3-9. `NanumiPasswordEncoder.java` — 비밀번호 해싱
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 왜 이 클래스가 필요한가
 
 **비밀번호를 원문 그대로 저장하면 절대 안 됩니다.** DB 가 한 번 유출되면 모든 회원의 비밀번호가 그대로 새어 나가고, 사람들은 다른 사이트에서도 같은 비밀번호를 쓰기 때문에 피해가 우리 서비스 밖으로 번집니다.
 
@@ -980,7 +1267,14 @@ nanumi:
 로그인할 때 : 입력한 비밀번호를 같은 방식으로 해싱 → 저장된 값과 같은가?
 ```
 
-#### 저장되는 문자열의 모양
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 저장되는 문자열의 모양
 
 ```
 $nanumi$1$210000$ES9dxu6QeMBGl8fA4kR6bw$Xo1rK7...(43자)
@@ -1001,7 +1295,14 @@ $nanumi$1$210000$ES9dxu6QeMBGl8fA4kR6bw$Xo1rK7...(43자)
 **핵심 아이디어: "어떻게 만들었는지"를 해시 안에 같이 적어 둡니다.**
 나중에 반복 횟수를 60만으로 올려도, 예전 해시는 자기 안에 적힌 `210000` 을 보고 검증되므로 **기존 회원이 그대로 로그인됩니다.**
 
-#### 클래스 선언과 상수
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 클래스 선언과 상수
 
 ```java
 @Component
@@ -1045,7 +1346,14 @@ public class NanumiPasswordEncoder implements PasswordEncoder {           // (1)
 9. 설정값 그릇. 스프링이 주입합니다.
 10. **예전 BCrypt 해시를 검증할 때만 쓰는 도구.** 여기서 `new` 로 만들었으므로 `@RequiredArgsConstructor` 의 생성자 파라미터에 **들어가지 않습니다.**
 
-#### `encode` — 비밀번호를 해시로
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `encode` — 비밀번호를 해시로
 
 ```java
   @Override
@@ -1082,7 +1390,14 @@ public class NanumiPasswordEncoder implements PasswordEncoder {           // (1)
 5. 실제 해싱. 시간이 걸리는 건 이 줄입니다.
 6. **조각을 이어 붙입니다.** `StringBuilder` 는 문자열을 여러 번 이어 붙일 때 `+` 보다 효율적입니다.
 
-#### `matches` — 맞춰 보기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `matches` — 맞춰 보기
 
 ```java
   @Override
@@ -1124,7 +1439,14 @@ public class NanumiPasswordEncoder implements PasswordEncoder {           // (1)
 
    이 **미세한 시간 차를 수만 번 측정하면 해시를 앞에서부터 한 바이트씩 알아낼 수 있습니다**(타이밍 공격). `MessageDigest.isEqual` 은 틀려도 끝까지 다 비교해서 **항상 같은 시간**이 걸립니다.
 
-#### `upgradeEncoding` — 다시 해싱해야 하나?
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `upgradeEncoding` — 다시 해싱해야 하나?
 
 ```java
   @Override
@@ -1163,7 +1485,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 **평문 비밀번호를 손에 쥘 수 있는 순간이 거기뿐이기 때문입니다.** DB 에는 해시만 있으니 나중에는 다시 해싱하고 싶어도 할 수 없습니다.
 덕분에 `application.yml` 의 `iterations` 를 올려 두기만 하면, **회원들이 로그인할 때마다 알아서 강한 해시로 바뀝니다.** 별도의 마이그레이션 작업이 필요 없습니다.
 
-#### `isLegacyHash` — 예전 해시인가
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `isLegacyHash` — 예전 해시인가
 
 ```java
   public boolean isLegacyHash(String encodedPassword) {
@@ -1181,7 +1510,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 
 1. **향상된 for 문**입니다. `BCRYPT_PREFIXES` 배열의 값을 하나씩 `prefix` 에 넣어 가며 반복합니다.
 
-#### `resolveIterations` — 설정값 확인
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `resolveIterations` — 설정값 확인
 
 ```java
   private int resolveIterations() {
@@ -1197,7 +1533,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 
 > **현재 비어 있는 안전장치**: 상한 검사가 없습니다. 반복 횟수를 7자리(100만 이상)로 설정하면 해시 문자열이 **84자**가 되어 `length = 83` 인 컬럼에 저장이 실패합니다. 해시 길이를 83 으로 유지하기로 한 이상, 여기에 `iterations > 999_999` 검사를 더해 두면 그 사고를 서버 기동 단계에서 막을 수 있습니다.
 
-#### `pbkdf2` — 실제 해싱
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `pbkdf2` — 실제 해싱
 
 ```java
   private byte[] pbkdf2(CharSequence rawPassword, byte[] salt, int iterations) {
@@ -1233,7 +1576,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
    >
    > **솔직한 한계**: (1)번의 `rawPassword.toString() + pepper` 가 중간에 `String` 을 하나 만들기 때문에, 그 `String` 은 GC 될 때까지 힙에 남습니다. 즉 이 지우기는 절반만 유효합니다. 완벽히 하려면 `char[]` 끼리 이어 붙여야 하는데, 지금 단계에서는 과한 작업이라 두었습니다.
 
-#### `parse` — 저장된 해시 쪼개기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `parse` — 저장된 해시 쪼개기
 
 ```java
   private ParsedHash parse(String encodedPassword) {
@@ -1287,13 +1637,34 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 
 ---
 
-### 3-10. `LoginAttemptService.java` — 비밀번호 찍기 막기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 무엇을 막나
+# 3-10. `LoginAttemptService.java` — 비밀번호 찍기 막기
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 무엇을 막나
 
 비밀번호를 계속 바꿔 가며 찍어 보는 공격(무차별 대입)을 막습니다. 아무리 해싱을 느리게 해도, **시도 자체를 무제한으로 허용하면** 결국 뚫립니다.
 
-#### 카운터가 두 개인 이유
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 카운터가 두 개인 이유
 
 ```java
   private static final int EMAIL_MAX_ATTEMPTS = 5;                        // (1)
@@ -1319,7 +1690,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
    > 상한이 없으면 **키를 계속 바꿔 가며 요청하는 것만으로 서버 메모리를 고갈시킬 수 있습니다.** 존재하지 않는 이메일로 계속 로그인 시도하면 항목이 무한정 쌓입니다.
 6. **`Clock`** — 시계를 필드로 들고 있습니다. 이유는 바로 아래.
 
-#### 생성자가 두 개인 이유
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 생성자가 두 개인 이유
 
 ```java
   public LoginAttemptService() {
@@ -1337,7 +1715,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
    > **왜 이렇게 하나**: "10분 뒤에 차단이 풀리는가"를 테스트하려면 어떻게 할까요? `Thread.sleep(600000)` 으로 10분을 기다릴 수는 없습니다. 대신 **가짜 시계**를 넣어서 "지금은 10분 뒤"라고 말해 주면 즉시 확인할 수 있습니다.
    > 이렇게 **바깥 세계(시간, 파일, 네트워크)를 밖에서 넣어 주는 것**을 의존성 주입이라 하고, 테스트하기 좋은 코드의 핵심 기법입니다.
 
-#### 바깥에 열어 둔 메서드들
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 바깥에 열어 둔 메서드들
 
 ```java
   public void checkBlocked(String email, String clientIp) {
@@ -1391,7 +1776,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
    **`Test@a.com`** 과 **`test@a.com`** 을 **같은 키로** 세기 위해서입니다. 안 그러면 대소문자만 바꿔 가며 카운터를 피할 수 있습니다.
    > **`Locale.ROOT`** 를 지정하는 이유: 터키어 환경에서는 `I` 를 소문자로 바꾸면 `i` 가 아니라 `ı`(점 없는 i)가 됩니다. 서버 설정에 따라 동작이 달라지는 걸 막으려고 **언어 중립 기준**을 지정합니다.
 
-#### 내부 클래스 `Counter`
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 내부 클래스 `Counter`
 
 ```java
   private static final class Counter {                                    // (1)
@@ -1502,9 +1894,23 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 
 ---
 
-### 3-11. `SanitizingStringDeserializer.java` — 들어오는 글자 다듬기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 무엇을 막나
+# 3-11. `SanitizingStringDeserializer.java` — 들어오는 글자 다듬기
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 무엇을 막나
 
 눈에 보이지 않거나, 겉보기만 같은 글자로 검사를 피해 가는 걸 막습니다.
 
@@ -1514,7 +1920,14 @@ if (nanumiPasswordEncoder.upgradeEncoding(account.getPassword())) {
 "  admin  "   ← 앞뒤 공백
 ```
 
-#### 클래스 선언
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 클래스 선언
 
 ```java
 public class SanitizingStringDeserializer extends StdScalarDeserializer<String> {  // (1)
@@ -1544,7 +1957,14 @@ public class SanitizingStringDeserializer extends StdScalarDeserializer<String> 
    - `BYTE_ORDER_MARK` : 파일 맨 앞에 붙는 보이지 않는 표식
 4. **`super(...)`** — 부모 클래스의 생성자를 부릅니다. "나는 `String` 을 다루는 역직렬화기"라고 알려 주는 것입니다.
 
-#### 실제 동작
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 실제 동작
 
 ```java
   @Override
@@ -1628,7 +2048,14 @@ public class SanitizingStringDeserializer extends StdScalarDeserializer<String> 
 > **이 부품의 좋은 점**: `JacksonConfig` 에 한 번 등록해 두면 **요청 본문의 모든 문자열**에 자동 적용됩니다. DTO 를 새로 만들어도, 필드를 추가해도 빠뜨릴 일이 없습니다. 검증(`@SafeText` 등)보다 **먼저** 돌기 때문에, 검증기들은 이미 깨끗해진 값만 보게 됩니다.
 
 ---
-### 3-12. `AuthController.java` — 요청을 받는 입구
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-12. `AuthController.java` — 요청을 받는 입구
 
 **컨트롤러는 얇아야 합니다.** 여기서 하는 일은 "받아서 서비스에 넘기고, 상태 코드를 정해서 돌려주는 것"뿐입니다. 판단은 전부 서비스가 합니다.
 
@@ -1652,7 +2079,14 @@ public class AuthController {
    > - 필요한 것이 생성자에 다 드러나서 **의존 관계가 한눈에 보임**
    > - 테스트에서 `new AuthController(가짜서비스)` 로 바로 만들 수 있음
 
-#### 회원가입
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 회원가입
 
 ```java
   @PostMapping("/signup")                                                 // (1)
@@ -1668,7 +2102,14 @@ public class AuthController {
 4. **`ResponseEntity`** — 상태 코드·헤더·본문을 직접 정할 수 있는 응답 상자입니다.
    **`CREATED`(201)** 를 쓰는 이유: "요청은 성공했고(200), 게다가 **새 자원이 만들어졌다**"를 더 정확히 알리기 위해서입니다.
 
-#### 로그인
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 로그인
 
 ```java
   @PostMapping("/login")
@@ -1681,7 +2122,14 @@ public class AuthController {
 1. **`HttpServletRequest`** — 요청의 원본입니다. 여기서 **접속한 IP** 를 꺼내려고 받습니다. 파라미터에 적기만 하면 스프링이 알아서 넣어 줍니다.
 2. **`ResponseEntity.ok(...)`** — 200 으로 돌려주는 짧은 표현.
 
-#### 나머지 셋
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 나머지 셋
 
 ```java
   @PostMapping("/refresh")
@@ -1712,7 +2160,14 @@ public class AuthController {
 
    **로그인이 안 됐다면 여기까지 오지도 못합니다.** `SecurityConfig` 의 `anyRequest().authenticated()` 가 먼저 401 로 끊기 때문입니다. 그래서 컨트롤러에서 `userId == null` 을 검사할 필요가 없습니다.
 
-#### IP 알아내기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# IP 알아내기
 
 ```java
   private String resolveClientIp(HttpServletRequest request) {
@@ -1739,9 +2194,23 @@ public class AuthController {
 
 ---
 
-### 3-13. DTO — 주고받는 데이터의 모양
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### DTO 가 뭔가요
+# 3-13. DTO — 주고받는 데이터의 모양
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# DTO 가 뭔가요
 
 **Data Transfer Object** — "데이터를 나르는 객체"입니다. 요청으로 받는 모양, 응답으로 주는 모양을 클래스로 적어 둔 것입니다.
 
@@ -1755,7 +2224,14 @@ public class AuthController {
 
 그래서 **경계에서 모양을 갈아탑니다.**
 
-#### `record` 문법
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `record` 문법
 
 ```java
 public record LoginResponse(String accessToken, String refreshToken, UserResponse user) { }
@@ -1770,7 +2246,14 @@ public record LoginResponse(String accessToken, String refreshToken, UserRespons
 
 **값이 바뀌지 않는(불변) 데이터 묶음**에 딱 맞습니다. 만든 뒤에는 아무도 못 바꾸므로, 여러 곳을 돌아다녀도 안전합니다.
 
-#### 요청 DTO 4개
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 요청 DTO 4개
 
 **`SignupRequest`**
 
@@ -1840,7 +2323,14 @@ public record WithdrawalRequest(
 2. **여기 비밀번호도 형식 검사를 안 합니다.** 새로 정하는 값이 아니라 **본인 확인용**이고, 예전 규칙으로 가입한 회원도 탈퇴할 수 있어야 하기 때문입니다.
 3. **255자** 는 [`User.WITHDRAWAL_REASON_LENGTH`](#3-16-엔티티--db-표를-자바-클래스로) 와 맞춰 둔 값입니다. 여기서 안 막으면 DB 저장 단계에서 터집니다.
 
-#### 응답 DTO 7개
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 응답 DTO 7개
 
 ```java
 public record SignupResponse(String message, UserResponse user) {
@@ -1891,9 +2381,23 @@ public record ErrorResponse(int status, String message) {                 // (1)
 
 ---
 
-### 3-14. 검증 — 값이 규칙에 맞는지 보기
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 구조: 스티커 + 검사기
+# 3-14. 검증 — 값이 규칙에 맞는지 보기
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 구조: 스티커 + 검사기
 
 검증은 **두 파일이 한 쌍**으로 동작합니다.
 
@@ -1904,7 +2408,14 @@ public record ErrorResponse(int status, String message) {                 // (1)
 EmailValidator       (validator/)   ← 실제 검사 코드
 ```
 
-#### 스티커 쪽 (`ValidEmail.java`)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 스티커 쪽 (`ValidEmail.java`)
 
 ```java
 @Target(ElementType.FIELD)                                                // (1)
@@ -1937,7 +2448,14 @@ public @interface ValidEmail {                                            // (5)
 | `@ValidNickname` | `NicknameValidator` | 닉네임 |
 | `@SafeText` | `SafeTextValidator` | 닉네임·아파트명·동·호·탈퇴 사유 |
 
-#### `EmailValidator` — 이메일 검사
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `EmailValidator` — 이메일 검사
 
 ```java
 public class EmailValidator implements ConstraintValidator<ValidEmail, String> {  // (1)
@@ -2010,7 +2528,14 @@ public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
 2. 우리 메시지를 대신 담습니다.
 3. **항상 `false` 를 돌려주므로**, 부르는 쪽에서 `return reject(...)` 로 한 줄에 쓸 수 있습니다.
 
-#### `PasswordValidator` — 비밀번호 검사
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `PasswordValidator` — 비밀번호 검사
 
 ```java
   public static final int MIN_LENGTH = 8;
@@ -2042,7 +2567,14 @@ public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
 
    "영문이 **포함**되어 있는가"를 보는 것이므로 `find()` 가 맞습니다.
 
-#### `NicknameValidator` — 가장 짧은 검사기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `NicknameValidator` — 가장 짧은 검사기
 
 ```java
 public class NicknameValidator implements ConstraintValidator<ValidNickname, String> {
@@ -2061,7 +2593,14 @@ public class NicknameValidator implements ConstraintValidator<ValidNickname, Str
 1. **`[가-힣]`** 은 완성형 한글 전체 범위입니다. `{2,10}` 은 2자 이상 10자 이하.
 2. **`reject` 를 안 쓰므로** `@ValidNickname` 의 기본 메시지("닉네임 형식이 맞지 않습니다")가 그대로 나갑니다. 규칙이 하나뿐이라 나눌 필요가 없습니다.
 
-#### `SafeTextValidator` — 스크립트 막기
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `SafeTextValidator` — 스크립트 막기
 
 **XSS 공격**을 막습니다. 닉네임에 이런 걸 넣는 상황입니다.
 
@@ -2153,11 +2692,25 @@ public class NicknameValidator implements ConstraintValidator<ValidNickname, Str
 > 물론 **화면에 그릴 때 이스케이프하는 것**이 근본 대책입니다. 이건 그 앞에 한 겹 더 두는 것입니다.
 
 ---
-### 3-15. `AuthService.java` — 실제로 판단하는 곳
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-15. `AuthService.java` — 실제로 판단하는 곳
 
 **245줄. 이 프로젝트의 심장입니다.** 회원가입·로그인·재발급·로그아웃·탈퇴의 모든 판단이 여기서 일어납니다.
 
-#### 클래스 선언
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 클래스 선언
 
 ```java
 @Service                                                                  // (1)
@@ -2186,7 +2739,14 @@ public class AuthService {
    > **그리고 이것이 [변경 감지](#0-5-데이터베이스와-jpa)가 동작하는 조건입니다.** 트랜잭션 안에서 엔티티 값을 바꾸면, `save()` 를 안 불러도 끝날 때 자동으로 `UPDATE` 가 나갑니다.
 3. **필요한 도구 5개.** 전부 `final` + 생성자 주입입니다.
 
-#### 더미 해시 — 눈에 안 보이는 방어
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 더미 해시 — 눈에 안 보이는 방어
 
 ```java
   private String dummyPasswordHash;                                       // (1)
@@ -2213,7 +2773,14 @@ public class AuthService {
 > **솔직한 한계**: 이건 **로그인 응답 시간만** 맞추는 것입니다. 회원가입은 중복 이메일을 409 로 그대로 알려 주므로 **가입 여부 자체를 숨기지는 못합니다.**
 > 가입 화면에서 "이미 쓰는 이메일" 안내를 빼면 UX 가 크게 나빠져서 노출을 감수한 것이고, 로그인 쪽 방어는 **"가입 여부를 모르는 사람이 응답 시간만으로 알아내는 것"** 을 막는 데 목적이 있습니다.
 
-#### 회원가입
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 회원가입
 
 ```java
   public SignupResponse signup(SignupRequest request) {
@@ -2261,7 +2828,14 @@ public class AuthService {
 
 > 🔎 **검사와 저장 사이의 틈**: 2번 검사를 통과한 직후, 저장하기 전에 **다른 요청이 같은 이메일로 가입할 수 있습니다.** 그러면 둘 다 검사를 통과하고 DB 제약에서 하나가 터집니다. 그 경우를 [`GlobalExceptionHandler`](#3-18-예외-처리--오류를-한-모양으로) 가 받아서 **500 대신 409** 로 바꿔 줍니다. 이중으로 막아 둔 것입니다.
 
-#### 로그인 — 가장 복잡한 메서드
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 로그인 — 가장 복잡한 메서드
 
 ```java
   public LoginResponse login(LoginRequest request, String clientIp) {
@@ -2312,7 +2886,14 @@ public class AuthService {
    > **`save()` 가 없는데도 DB 에 반영됩니다.** `account` 는 트랜잭션 안에서 조회한 엔티티라, 값이 바뀌면 [변경 감지](#0-5-데이터베이스와-jpa)로 자동 `UPDATE` 됩니다.
 8. **토큰 두 개를 발급합니다.**
 
-#### 토큰 재발급 — 회전과 재사용 감지
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 토큰 재발급 — 회전과 재사용 감지
 
 ```java
   @Transactional(noRollbackFor = CustomException.class)                   // (1)
@@ -2371,7 +2952,14 @@ public class AuthService {
 6. **회전(rotation)** — 재발급할 때마다 **리프레시 토큰도 새로 내줍니다.**
    > 한 번 쓴 토큰은 즉시 무효가 되므로, 훔쳐 가도 쓸 수 있는 시간이 짧아집니다. 그리고 위의 재사용 감지가 성립하려면 회전이 반드시 필요합니다.
 
-#### 로그아웃
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 로그아웃
 
 ```java
   public LogoutResponse logout(Long userId) {
@@ -2393,7 +2981,14 @@ public class AuthService {
 > 그래서 **액세스 토큰의 수명을 15분으로 짧게** 잡아서 그 틈을 줄이는 방식을 택했습니다.
 > 결과적으로 로그아웃 후 최대 15분간 기존 액세스 토큰이 유효하지만, **새로 받을 수는 없으므로** 그 뒤로는 완전히 끊깁니다.
 
-#### 회원탈퇴
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 회원탈퇴
 
 ```java
   public WithdrawalResponse withdraw(Long userId, WithdrawalRequest request) {
@@ -2422,7 +3017,14 @@ public class AuthService {
    > 진짜로 지우면 (1) 실수로 탈퇴한 사람을 되살릴 수 없고, (2) 그 사람이 남긴 글에서 작성자가 사라져 화면이 깨지고, (3) 법적으로 일정 기간 보관해야 하는 정보를 지워 버릴 수 있습니다.
 4. **로그인 세션도 끊습니다.**
 
-#### 보조 메서드들
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 보조 메서드들
 
 ```java
   private String issueRefreshToken(Account account, User user) {
@@ -2488,9 +3090,23 @@ public class AuthService {
 
 ---
 
-### 3-16. 엔티티 — DB 표를 자바 클래스로
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 왜 `User` 와 `Account` 로 나눴나
+# 3-16. 엔티티 — DB 표를 자바 클래스로
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 왜 `User` 와 `Account` 로 나눴나
 
 | `users` 테이블 | `accounts` 테이블 |
 |---|---|
@@ -2499,7 +3115,14 @@ public class AuthService {
 
 나눠 두면 나중에 **카카오 로그인·구글 로그인**을 추가할 때 `accounts` 만 늘리면 됩니다. 한 사람이 여러 로그인 수단을 가질 수 있게 확장하기 쉽습니다.
 
-#### `User.java`
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `User.java`
 
 ```java
 @Entity                                                                   // (1)
@@ -2617,7 +3240,14 @@ public class User {
 1. **부르는 쪽이 `user.getStatus() == Status.WITHDRAWN` 을 적을 필요가 없습니다.** 판단 로직이 엔티티 안에 있습니다.
 2. **세 가지 변경이 한 메서드에 묶여 있습니다.** 밖에서 setter 로 하나씩 바꾸면 **하나를 빼먹을 수 있는데**, 이렇게 묶어 두면 그럴 수 없습니다.
 
-#### `Account.java`
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `Account.java`
 
 ```java
 @Entity
@@ -2691,7 +3321,14 @@ public class User {
 
 ---
 
-### 3-17. 리포지토리 — DB 에 묻는 창구
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 3-17. 리포지토리 — DB 에 묻는 창구
 
 ```java
 public interface UserRepository extends JpaRepository<User, Long> {       // (1)
@@ -2734,9 +3371,23 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
 ---
 
-### 3-18. 예외 처리 — 오류를 한 모양으로
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 전체 그림
+# 3-18. 예외 처리 — 오류를 한 모양으로
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 전체 그림
 
 ```
 서비스에서  throw new CustomException(ErrorCode.DUPLICATE_EMAIL)
@@ -2750,7 +3401,14 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
 **어디서 무슨 오류가 나든 프런트는 항상 같은 모양을 받습니다.**
 
-#### `ErrorCode.java` — 오류 목록
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `ErrorCode.java` — 오류 목록
 
 ```java
 @Getter
@@ -2793,7 +3451,14 @@ public enum ErrorCode {
 5. **미처 잡지 못한 예외.** 원인은 **로그에만** 남기고 회원에게는 알리지 않습니다.
    > 예외 메시지에는 테이블 이름, 파일 경로, 쿼리 내용 같은 **내부 정보**가 들어 있습니다. 그대로 내보내면 공격자에게 지도를 그려 주는 셈입니다.
 
-#### `CustomException.java`
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `CustomException.java`
 
 ```java
 @Getter
@@ -2816,7 +3481,14 @@ public class CustomException extends RuntimeException {                   // (1)
    > 우리는 예외를 **맨 위 `GlobalExceptionHandler` 한 곳에서** 받을 것이므로, 중간 코드가 신경 쓰지 않아도 되는 Unchecked 가 맞습니다.
 2. **`super(...)`** — 부모에게 메시지를 전달합니다. 그래야 로그에 찍힐 때 메시지가 보입니다.
 
-#### `GlobalExceptionHandler.java`
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `GlobalExceptionHandler.java`
 
 ```java
 @Slf4j
@@ -2938,9 +3610,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler { // 
 
 ---
 
-### 3-19. `application.yml` — 설정 파일
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-#### 파일이 세 개인 이유
+# 3-19. `application.yml` — 설정 파일
+
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 파일이 세 개인 이유
 
 ```
 application.yml        ← 공통 설정 + 어느 프로필을 쓸지
@@ -2950,35 +3636,84 @@ application-prod.yml   ← 운영용 (MySQL)
 
 `spring.profiles.active` 에 적힌 것만 **추가로** 읽힙니다. 같은 항목이 있으면 프로필 파일이 이깁니다.
 
-#### `application.yml` (공통)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `application.yml` (공통)
 
 ```yaml
 spring:
   application:
     name: api
   profiles:
-    active: dev                       # (1)
+    active: dev                       > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (1)
 
 jwt:
-  access-token-expiration: 900000     # 15분   (2)
-  refresh-token-expiration: 1209600000 # 14일
+  access-token-expiration: 900000     > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 15분   (2)
+  refresh-token-expiration: 1209600000 > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 14일
 
 nanumi:
   security:
     password:
       iterations: 210000
-      pepper: ${PASSWORD_PEPPER:nanumi-local-dev-pepper}    # (3)
+      pepper: ${PASSWORD_PEPPER:nanumi-local-dev-pepper}    > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (3)
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
 
 server:
   error:
-    include-message: never            # (4)
+    include-message: never            > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (4)
     include-stacktrace: never
     include-binding-errors: never
     include-exception: false
 
-  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}   # (5)
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}   > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (5)
 ```
 
 1. **기본은 개발 프로필.** 운영에서는 `SPRING_PROFILES_ACTIVE=prod` 로 덮어씁니다.
@@ -2987,34 +3722,83 @@ server:
 4. **오류 응답에 내부 정보가 섞여 나가지 않게 전부 막습니다.** 예외 이름, 스택 추적이 밖으로 나가면 공격자에게 힌트가 됩니다.
 5. **`X-Forwarded-For` 를 믿을지.** 기본은 `none`(안 믿음). ([3-12](#3-12-authcontrollerjava--요청을-받는-입구) 참고)
 
-#### `application-dev.yml` (개발)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `application-dev.yml` (개발)
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:h2:mem:nanumi;MODE=MySQL     # (1)
+    url: jdbc:h2:mem:nanumi;MODE=MySQL     > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (1)
     driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
     hibernate:
-      ddl-auto: update                     # (2)
-    show-sql: true                         # (3)
+      ddl-auto: update                     > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (2)
+    show-sql: true                         > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (3)
     properties:
       hibernate:
         format_sql: true
   h2:
     console:
-      enabled: true                        # (4)
+      enabled: true                        > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (4)
       path: /h2-console
 
 jwt:
-  private-key-path: classpath:keys/private_key.pem   # (5)
+  private-key-path: classpath:keys/private_key.pem   > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (5)
   public-key-path: classpath:keys/public_key.pem
 
 logging:
   level:
-    com.nanumi: debug                      # (6)
+    com.nanumi: debug                      > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (6)
 ```
 
 1. **`h2:mem`** — **메모리에만 존재하는 DB.** 서버를 끄면 데이터가 다 사라집니다. 설치가 필요 없어 개발에 편합니다.
@@ -3028,22 +3812,57 @@ logging:
    > ⚠️ 여기 키는 **개발용 예시 키**입니다. 운영 키는 절대 저장소에 올리면 안 됩니다.
 6. **우리 패키지만 `debug` 수준**으로 자세히 기록합니다.
 
-#### `application-prod.yml` (운영)
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# `application-prod.yml` (운영)
 
 ```yaml
 spring:
   datasource:
-    url: ${DB_URL}                         # (1)
+    url: ${DB_URL}                         > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (1)
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate                   # (2)
-    show-sql: false                        # (3)
+      ddl-auto: validate                   > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (2)
+    show-sql: false                        > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (3)
   h2:
     console:
-      enabled: false                       # (4)
+      enabled: false                       > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (4)
 
 jwt:
   private-key-path: ${JWT_PRIVATE_KEY_PATH}
@@ -3053,7 +3872,14 @@ nanumi:
   security:
     password:
       iterations: ${PASSWORD_ITERATIONS:210000}
-      pepper: ${PASSWORD_PEPPER}           # (5)
+      pepper: ${PASSWORD_PEPPER}           > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# (5)
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS}
 ```
@@ -3066,7 +3892,14 @@ nanumi:
 4. **H2 콘솔을 끕니다.**
 5. **pepper 에 기본값을 두지 않았습니다.** 값이 없으면 안 뜨게 해서, **개발용 pepper 로 운영이 도는 사고**를 원천 차단합니다.
 
-#### 운영에 필요한 환경 변수
+###> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 운영에 필요한 환경 변수
 
 | 이름 | 예시 | 없으면 |
 |---|---|---|
@@ -3081,11 +3914,25 @@ nanumi:
 > ⚠️ **`PASSWORD_PEPPER` 는 DB 백업과 별도로 보관해야 합니다.** 잃어버리면 전 회원이 로그인 불가가 되고, 되살릴 방법이 없습니다.
 
 ---
-## 4. 기능별로 따라가 보기
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4. 기능별로 따라가 보기
 
 3장에서 파일을 하나씩 봤으니, 이제 **실제 요청 하나가 여러 파일을 어떻게 오가는지** 봅니다.
 
-### 4-1. 회원가입
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4-1. 회원가입
 
 ```
 POST /api/auth/signup
@@ -3093,7 +3940,14 @@ POST /api/auth/signup
   "nickname": "철수", "aptName": "행복아파트", "dong": "101", "ho": "" }
 ```
 
-| # | 어디서 | 무슨 일 |
+| > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# | 어디서 | 무슨 일 |
 |---|---|---|
 | 1 | `SecurityConfig` | `permitAll` 목록에 있음 → 토큰 없이 통과 |
 | 2 | `SanitizingStringDeserializer` | `"Test@A.com "` → `"Test@A.com"` (공백 제거)<br>비밀번호는 **공백을 안 뗌** |
@@ -3111,13 +3965,27 @@ POST /api/auth/signup
 
 **토큰을 안 주는 것에 주목하세요.** 가입 후 로그인 화면으로 보내는 정책입니다.
 
-### 4-2. 로그인
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4-2. 로그인
 
 ```
 POST /api/auth/login   { "email": "test@a.com", "password": "nanumi1234!" }
 ```
 
-| # | 어디서 | 무슨 일 |
+| > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# | 어디서 | 무슨 일 |
 |---|---|---|
 | 1 | `AuthController` | `getRemoteAddr()` 로 IP 확보 |
 | 2 | `LoginAttemptService.checkBlocked` | 이메일 5회 / IP 20회 초과면 **429 종료** |
@@ -3131,13 +3999,27 @@ POST /api/auth/login   { "email": "test@a.com", "password": "nanumi1234!" }
 | 9 | `issueRefreshToken` | 리프레시 토큰(14일) 발급 → **해시만** DB 에 저장 |
 | 10 | 응답 | `200` + 토큰 2개 + 회원 정보 |
 
-### 4-3. 토큰 재발급
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4-3. 토큰 재발급
 
 ```
 POST /api/auth/refresh   { "refreshToken": "eyJ..." }
 ```
 
-| # | 무슨 일 |
+| > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# | 무슨 일 |
 |---|---|
 | 1 | 서명·만료·`typ=refresh` 확인 → 실패면 **401** |
 | 2 | 계정 조회 |
@@ -3149,14 +4031,28 @@ POST /api/auth/refresh   { "refreshToken": "eyJ..." }
 
 **4번이 재사용 감지입니다.** 서명은 맞는데 저장된 것과 다르다 = 옛 토큰이 뒤늦게 쓰였다 = 누가 훔쳐 갔을 수 있다 → **진짜 주인까지 끊고 다시 로그인하게 합니다.**
 
-### 4-4. 로그아웃
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4-4. 로그아웃
 
 ```
 POST /api/auth/logout
 Authorization: Bearer eyJ...
 ```
 
-| # | 무슨 일 |
+| > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# | 무슨 일 |
 |---|---|
 | 1 | `JwtAuthenticationFilter` 가 토큰을 읽어 `userId` 를 `SecurityContext` 에 담음 |
 | 2 | `SecurityConfig` 의 `authenticated()` 통과 (토큰이 없으면 여기서 **401**) |
@@ -3166,7 +4062,14 @@ Authorization: Bearer eyJ...
 
 **액세스 토큰은 여전히 최대 15분간 유효합니다.** 다만 재발급을 못 하므로 그 뒤로는 완전히 끊깁니다.
 
-### 4-5. 회원탈퇴
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 4-5. 회원탈퇴
 
 ```
 POST /api/auth/withdrawal
@@ -3174,7 +4077,14 @@ Authorization: Bearer eyJ...
 { "password": "nanumi1234!", "reason": "이사 갑니다" }
 ```
 
-| # | 무슨 일 |
+| > **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# | 무슨 일 |
 |---|---|
 | 1~3 | 로그아웃과 동일 (토큰 확인 → `userId`) |
 | 4 | 이미 탈퇴했으면 **403** |
@@ -3185,11 +4095,25 @@ Authorization: Bearer eyJ...
 
 ---
 
-## 5. 어노테이션 사전
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 5. 어노테이션 사전
 
 이 프로젝트에 나오는 어노테이션을 한자리에 모았습니다.
 
-### 스프링 기본
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 스프링 기본
 
 | 어노테이션 | 하는 일 | 이 프로젝트에서 |
 |---|---|---|
@@ -3205,7 +4129,14 @@ Authorization: Bearer eyJ...
 | `@PostConstruct` | 빈이 만들어진 직후 한 번 실행 | 키 읽기, 더미 해시 만들기 |
 | `@Transactional` | 트랜잭션으로 묶기 | `AuthService` 전체 |
 
-### 웹 요청 처리
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 웹 요청 처리
 
 | 어노테이션 | 하는 일 |
 |---|---|
@@ -3217,7 +4148,14 @@ Authorization: Bearer eyJ...
 | `@RestControllerAdvice` | 모든 컨트롤러의 예외를 받음 |
 | `@ExceptionHandler(X.class)` | X 예외가 오면 이 메서드 실행 |
 
-### JPA
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# JPA
 
 | 어노테이션 | 하는 일 |
 |---|---|
@@ -3232,7 +4170,14 @@ Authorization: Bearer eyJ...
 | `@EntityListeners(AuditingEntityListener.class)` | 위 둘을 동작시키는 장치 |
 | `@EnableJpaAuditing` | 그 기능 전체를 켜는 스위치 |
 
-### 검증
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 검증
 
 | 어노테이션 | 하는 일 |
 |---|---|
@@ -3242,7 +4187,14 @@ Authorization: Bearer eyJ...
 | `@Target(ElementType.FIELD)` | 필드에만 붙일 수 있음 |
 | `@Retention(RUNTIME)` | 실행 중에도 읽을 수 있게 유지 (**필수**) |
 
-### 롬복
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 롬복
 
 | 어노테이션 | 만들어 주는 것 |
 |---|---|
@@ -3254,9 +4206,23 @@ Authorization: Bearer eyJ...
 
 ---
 
-## 6. 입문자가 자주 막히는 질문
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
 
-### Q1. `save()` 를 안 불렀는데 왜 DB 에 반영되나요?
+# 6. 입문자가 자주 막히는 질문
+
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q1. `save()` 를 안 불렀는데 왜 DB 에 반영되나요?
 
 **변경 감지(dirty checking)** 때문입니다.
 
@@ -3279,7 +4245,14 @@ public LogoutResponse logout(Long userId) {
 - **트랜잭션 안**이어야 합니다 (`@Transactional`)
 - **조회해 온 엔티티**여야 합니다. `new` 로 직접 만든 건 작업대에 없으므로 `save()` 가 필요합니다
 
-### Q2. `final` 은 왜 이렇게 많이 붙나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q2. `final` 은 왜 이렇게 많이 붙나요?
 
 **"이건 안 바뀐다"를 컴파일러에게 약속하는 것**입니다.
 
@@ -3291,7 +4264,14 @@ private final AuthService authService;    // 한 번 정해지면 절대 안 바
 - 읽는 사람이 "이 값이 중간에 바뀔까?"를 걱정하지 않아도 됩니다
 - 여러 요청이 동시에 처리될 때 안전합니다
 
-### Q3. `record` 와 `class` 는 언제 나눠 쓰나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q3. `record` 와 `class` 는 언제 나눠 쓰나요?
 
 | | `record` | `class` |
 |---|---|---|
@@ -3301,7 +4281,14 @@ private final AuthService authService;    // 한 번 정해지면 절대 안 바
 
 엔티티가 `class` 인 이유는 **값이 바뀌어야 하고**(탈퇴, 비밀번호 변경), **동작이 있기** 때문입니다(`isWithdrawn()`).
 
-### Q4. `Optional` 을 왜 쓰나요? `null` 이 편한데요.
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q4. `Optional` 을 왜 쓰나요? `null` 이 편한데요.
 
 `null` 은 **검사를 깜빡해도 컴파일이 됩니다.**
 
@@ -3324,7 +4311,14 @@ repository.findByEmail(email)
 | `.ifPresent(...)` | 아무것도 안 함 |
 | `.isPresent()` | `false` |
 
-### Q5. 왜 계층을 나누나요? 한 파일에 쓰면 안 되나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q5. 왜 계층을 나누나요? 한 파일에 쓰면 안 되나요?
 
 **각각을 따로 테스트할 수 있기 때문**입니다.
 
@@ -3333,7 +4327,14 @@ repository.findByEmail(email)
 
 한 파일에 다 있으면 비밀번호 해싱 하나를 테스트하려고 DB 를 띄워야 합니다.
 
-### Q6. 오류를 왜 자세히 안 알려 주나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q6. 오류를 왜 자세히 안 알려 주나요?
 
 **자세한 오류는 공격자에게 지도를 그려 주기 때문**입니다.
 
@@ -3345,7 +4346,14 @@ repository.findByEmail(email)
 
 **예외는 하나 있습니다 — 입력 검증 오류입니다.** "비밀번호는 8자 이상" 은 사용자가 고쳐야 하므로 알려 줍니다.
 
-### Q7. 인터페이스만 있고 구현이 없는데 어떻게 도나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q7. 인터페이스만 있고 구현이 없는데 어떻게 도나요?
 
 `UserRepository` 얘기입니다. **스프링 데이터 JPA 가 실행 중에 구현체를 만들어 줍니다.**
 
@@ -3361,7 +4369,14 @@ existsByNicknameIgnoreCase
 
 그래서 **이름을 틀리게 지으면 서버가 뜰 때 터집니다.** (없는 필드 이름을 쓰면 못 만드니까요)
 
-### Q8. 같은 검사를 왜 여러 번 하나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q8. 같은 검사를 왜 여러 번 하나요?
 
 이메일 중복을 세 번 막습니다.
 
@@ -3373,7 +4388,14 @@ existsByNicknameIgnoreCase
 
 **각각 잘하는 게 다릅니다.** ①은 빠르고, ②는 친절하고, ③은 확실합니다. 한 겹이 뚫려도 다음 겹이 막습니다.
 
-### Q9. 비밀번호를 왜 일부러 느리게 만드나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q9. 비밀번호를 왜 일부러 느리게 만드나요?
 
 **빠르면 공격자에게 유리하기 때문**입니다.
 
@@ -3384,7 +4406,14 @@ existsByNicknameIgnoreCase
 
 사용자는 0.1초를 못 느끼지만, 공격자에게는 넘을 수 없는 벽이 됩니다.
 
-### Q10. 토큰이 두 개인 이유가 뭔가요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q10. 토큰이 두 개인 이유가 뭔가요?
 
 **안전함과 편함을 맞바꾼 결과**입니다.
 
@@ -3399,7 +4428,14 @@ existsByNicknameIgnoreCase
 
 나눠 두면 **자주 오가는 것은 짧게**, **가끔 쓰는 것은 길게** 할 수 있습니다.
 
-### Q11. 테스트 파일은 어디에 무엇이 있나요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q11. 테스트 파일은 어디에 무엇이 있나요?
 
 ```
 src/test/java/com/nanumi/api/
@@ -3421,7 +4457,14 @@ src/test/java/com/nanumi/api/
 cd backend/api && ./mvnw test
 ```
 
-### Q12. 지금 코드에서 아직 안 된 것은 뭔가요?
+##> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# Q12. 지금 코드에서 아직 안 된 것은 뭔가요?
 
 이 문서를 쓰는 시점 기준으로, **코드에 흔적은 있지만 구현되지 않은 것들**입니다.
 
@@ -3439,7 +4482,14 @@ cd backend/api && ./mvnw test
 
 ---
 
-## 부록: 새 기능을 추가할 때 손대는 순서
+#> **주의: 이 문서의 DB·설정 부분은 오래된 내용입니다.**
+>
+> 작성 당시는 MySQL + `application-dev.yml` / `application-prod.yml` 분리 구조였습니다.
+> 지금은 **PostgreSQL**, `application.yml` 한 파일(프로필별 문서), 스키마는 **Flyway** 가 만듭니다.
+> 설정과 배포는 [deployment.md](deployment.md) 를 보십시오.
+> 그 외 코드 설명(보안, 인증 흐름, 예외 처리)은 현재 코드와 일치합니다.
+
+# 부록: 새 기능을 추가할 때 손대는 순서
 
 예를 들어 "닉네임 변경" 기능을 넣는다면:
 

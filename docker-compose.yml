@@ -11,7 +11,7 @@
 # 그래서 app 서비스는 profile 로 감춰 뒀고, --profile app 을 줄 때만 뜸.
 #
 # 운영은 Render 의 관리형 PostgreSQL 을 쓰므로 로컬도 PostgreSQL 로 맞춰 둠.
-# 로컬만 MySQL 이면 SQL 문법 차이를 배포한 뒤에야 알게 됨.
+# 로컬만 다른 DB 를 쓰면 SQL 문법 차이를 배포한 뒤에야 알게 됨.
 #
 # 여기 계정·비밀번호는 비밀값이 아님. 내 PC 안에서만 닿는 개발용 DB 이고,
 # application.yml 의 개발용 기본값과 같은 이유로 그대로 적어 둠.

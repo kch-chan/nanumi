@@ -23,7 +23,19 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
 
+    # Neon 무료 등급은 약 5분 유휴면 컴퓨트를 중지하고 TCP 연결을 끊음.
+    # 기본값(max-lifetime 30분)으로 두면 이미 끊긴 연결을 붙들고 있다가
+    # 다음 요청에서 실패함. 그래서 수명을 중지 시점보다 짧게 잡음
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 0
+      idle-timeout: 60000
+      max-lifetime: 240000 # 4분. Neon 유휴 중지(약 5분)보다 짧아야 함
+
   jpa:
+    # 요청이 끝날 때까지 커넥션을 붙들지 않게 함. 기본값이 true 라서
+    # 화면을 그리는 동안에도 DB 연결을 쥐고 있어 풀이 금방 마름
+    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -67,6 +79,13 @@ management:
     health:
       # UP/DOWN 만 내려줌. DB 주소 같은 상세는 감춤
       show-details: never
+      # /actuator/health 는 DB 까지 확인하므로, Neon 이 유휴 중지된 동안에는
+      # DOWN 이 나올 수 있음. 그걸 보고 플랫폼이 인스턴스를 재시작해 버림.
+      # liveness 는 "앱이 살아 있는지"만 보므로 배포 플랫폼의 확인 경로로 씀
+      # (DB 상태는 /actuator/health 로 따로 볼 수 있음)
+      group:
+        liveness:
+          include: livenessState
 
 # 참고: /actuator/health 는 SecurityConfig 에서 인증 없이 열어 둠
 

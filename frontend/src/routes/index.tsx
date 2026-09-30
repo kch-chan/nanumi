@@ -25,7 +25,8 @@ export const router = createBrowserRouter(
         <Route path="/signup" element={<SignupPage />} />
       </Route>
 
-      <Route path="/test" element={<TestPage />} />
+      {/* API 를 임의로 호출하는 확인용 화면임. 배포 빌드에는 넣지 않음 */}
+      {import.meta.env.DEV && <Route path="/test" element={<TestPage />} />}
     </>,
   ),
 );

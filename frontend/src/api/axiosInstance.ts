@@ -16,7 +16,19 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 // 개발에서는 Vite 프록시가 /api 를 백엔드로 넘겨 주므로 상대 경로면 됨.
 // 배포하면 프런트와 백엔드가 서로 다른 도메인이라 상대 경로가 정적 사이트를 가리켜 404 가 남.
 // 그래서 배포할 때는 VITE_API_BASE_URL 에 백엔드 주소를 넣어야 함
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+//
+// 배포 빌드에서 값이 없으면 그냥 죽게 둠. 조용히 /api 로 넘어가면 모든 요청이
+// 정적 사이트로 가는데, SPA rewrite 때문에 index.html 이 200 으로 돌아와서
+// "성공"으로 처리되고 HTML 문자열이 토큰 자리에 담김. 그게 훨씬 찾기 어려움
+const resolvedBaseURL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : undefined);
+
+if (!resolvedBaseURL) {
+  throw new Error(
+    'VITE_API_BASE_URL 이 설정되지 않았습니다. 배포 환경 변수에 백엔드 주소를 넣고 다시 빌드하십시오.',
+  );
+}
+
+const baseURL = resolvedBaseURL;
 
 const axiosInstance = axios.create({
   baseURL,
@@ -40,8 +52,13 @@ async function requestNewAccessToken(): Promise<string> {
     throw new Error('리프레시 토큰이 없음');
   }
 
-  // 인터셉터를 타지 않도록 기본 axios 로 부름
-  const { data } = await axios.post<TokenResponse>('/api/auth/refresh', {
+  // 인터셉터를 타지 않도록 기본 axios 로 부르되, 주소는 baseURL 을 붙여야 함.
+  // 여기서 '/api/auth/refresh' 처럼 상대 경로를 쓰면 요청이 백엔드가 아니라
+  // 프런트가 올라간 도메인으로 감. 배포 환경에서는 그쪽에 이 경로가 없으므로
+  // SPA rewrite 를 타서 index.html 이 200 으로 오거나 405/404 가 남.
+  // 그러면 accessToken 이 undefined 가 되어 재발급이 100% 실패하고,
+  // 액세스 토큰은 localStorage 에 남기지 않으므로 새로고침마다 로그아웃됨
+  const { data } = await axios.post<TokenResponse>(`${baseURL}/auth/refresh`, {
     refreshToken,
   });
 

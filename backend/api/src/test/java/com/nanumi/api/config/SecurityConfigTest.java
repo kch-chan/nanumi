@@ -43,16 +43,21 @@ class SecurityConfigTest {
   // Vercel 은 커밋마다 프리뷰 주소를 새로 만듦
   // 와일드카드가 실제로 매칭되지 않으면 프리뷰에서 API 호출이 전부 막힘
   @Test
-  @DisplayName("와일드카드 출처가 프리뷰 주소를 허용함")
+  @DisplayName("와일드카드 출처가 우리 프리뷰 주소만 허용함")
   void 와일드카드_출처() {
     CorsConfiguration configuration =
-        corsFor("/api/auth/login", List.of("https://nanumi.vercel.app", "https://*.vercel.app"));
+        corsFor(
+            "/api/auth/login",
+            List.of("https://nanumi-neon.vercel.app", "https://nanumi-neon-*.vercel.app"));
 
     assertThat(configuration).isNotNull();
-    assertThat(configuration.checkOrigin("https://nanumi.vercel.app"))
-        .isEqualTo("https://nanumi.vercel.app");
-    assertThat(configuration.checkOrigin("https://nanumi-git-feat-62-kch.vercel.app"))
-        .isEqualTo("https://nanumi-git-feat-62-kch.vercel.app");
+    assertThat(configuration.checkOrigin("https://nanumi-neon.vercel.app"))
+        .isEqualTo("https://nanumi-neon.vercel.app");
+    assertThat(configuration.checkOrigin("https://nanumi-neon-git-feat-62-kch.vercel.app"))
+        .isEqualTo("https://nanumi-neon-git-feat-62-kch.vercel.app");
+    // 우리 프로젝트가 아닌 vercel.app 주소는 막혀야 함.
+    // 전에 https://*.vercel.app 로 뒀더니 vercel.app 에 배포한 누구나 통과했음
+    assertThat(configuration.checkOrigin("https://totally-unrelated.vercel.app")).isNull();
     // 관계없는 도메인은 여전히 막혀야 함
     assertThat(configuration.checkOrigin("https://evil.example.com")).isNull();
   }
@@ -82,6 +87,6 @@ class SecurityConfigTest {
     CorsConfiguration configuration = corsFor("/api/auth/login", List.of());
 
     assertThat(configuration.getAllowedOriginPatterns()).isEmpty();
-    assertThat(configuration.checkOrigin("https://nanumi.vercel.app")).isNull();
+    assertThat(configuration.checkOrigin("https://nanumi-neon.vercel.app")).isNull();
   }
 }
