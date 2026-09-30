@@ -106,23 +106,43 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLButtonElement>) => {
 
 ## 테스트 도구
 ### Frontend
-- 단위/통합 테스트: Jest
+- 단위/통합 테스트: **Vitest** (`pnpm test`)
 - React 컴포넌트 테스트: React Testing Library
-- E2E 테스트: Playwright
+- E2E 테스트: 아직 없음 (도입한다면 Playwright)
 
 ### Backend
 - 단위 테스트: JUnit 5
 - Mocking: Mockito
 - API 통합 테스트: Spring Boot Test
+- **DB 는 인메모리를 쓰지 않음.** 테스트가 실제 PostgreSQL 에 붙고 Flyway 로 스키마를 만듦
+  (로컬은 `docker compose` 의 `nanumi_test`, CI 는 워크플로의 서비스 컨테이너)
 
 
 ## 환경 변수/시크릿 관리
-- .env, application-local.yml 등 .gitignore 설정
+- git 에 올리지 않는 것: `.env.dev`, `.env.prod`, `keys/*.pem`
+- 개발용 기본값은 `application.yml` 에 그대로 둠 (로컬 DB 에는 진짜 회원 정보가 없어 비밀이 아님)
+- 운영값은 Render·Vercel 대시보드의 환경 변수와 Secret Files. **GitHub Secrets 는 쓰지 않음**
+- 누가 들고 있고 어떻게 바꾸는지는 `docs/deployment.md` 참고
 
 
 ## API 응답 규칙
-- 추후 수정
+- 모든 경로 앞에 `/api`
+- 성공 응답은 감싸지 않고 필요한 값만 담음. 공통 래퍼(`{ data: ... }`)를 두지 않음
+- 실패 응답은 모양을 하나로 통일함
+
+```json
+{ "status": 401, "message": "유효하지 않은 토큰입니다." }
+```
+
+- 경로별 요청·응답과 상태 코드는 `docs/api-spec.md` 참고
+- 기준은 코드(`dto/`)이며, 문서와 어긋나면 코드가 맞음
 
 
 ## 예외 처리 규칙
-- 추후 수정
+- 회원에게 보일 오류는 `ErrorCode` 에 하나씩 정의하고 `CustomException` 으로 던짐
+- 응답으로 나가는 문구는 `ErrorCode` 에만 적음. 코드 곳곳에 문자열을 흩지 않음
+- `GlobalExceptionHandler` 가 한곳에서 받아 `ErrorResponse` 로 바꿈
+- **원인을 응답에 담지 않음.** 예외 이름·스택·바인딩 오류는 로그에만 남김
+  (`server.error.include-*` 를 모두 꺼 둠)
+- 계정 존재 여부처럼 알려 주면 탐색에 쓰일 수 있는 것은 구분해서 알려 주지 않음
+  (예: 이메일이 없는 경우와 비밀번호가 틀린 경우 모두 같은 401)
