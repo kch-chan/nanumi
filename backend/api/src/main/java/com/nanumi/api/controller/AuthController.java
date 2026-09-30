@@ -10,6 +10,7 @@ import com.nanumi.api.dto.response.LogoutResponse;
 import com.nanumi.api.dto.response.SignupResponse;
 import com.nanumi.api.dto.response.TokenResponse;
 import com.nanumi.api.dto.response.WithdrawalResponse;
+import com.nanumi.api.security.ClientIpResolver;
 import com.nanumi.api.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
+  private final ClientIpResolver clientIpResolver;
 
   @PostMapping("/signup")
   public ResponseEntity<SignupResponse> signup(
@@ -65,15 +67,9 @@ public class AuthController {
     return ResponseEntity.ok(authService.withdraw(userId, request));
   }
 
-  // 실제로 연결을 맺은 주소만 씀
-  //
-  // X-Forwarded-For 를 직접 읽지 않는 이유는, 그 헤더를 요청하는 쪽에서 마음대로 지어낼 수 있어서임
-  // 헤더를 믿으면 값만 바꿔 가며 보내는 것으로 로그인 잠금을 그대로 통과할 수 있음
-  //
-  // 프록시 뒤에 둘 때는 server.forward-headers-strategy 를 켜면 됨
-  // 그러면 스프링이 프록시가 붙인 헤더를 반영해서 getRemoteAddr() 자체를 바꿔 줌
-  // 다만 이건 프록시가 바깥에서 들어온 헤더를 지워 준다는 전제가 있어야 하므로 기본값은 꺼 둠
+  // 어느 값을 접속자 IP 로 볼지는 ClientIpResolver 가 정함
+  // 프록시 뒤에서는 연결 주소가 프록시 것이라, 그대로 쓰면 모든 이용자가 한 열쇠를 공유하게 됨
   private String resolveClientIp(HttpServletRequest request) {
-    return request.getRemoteAddr();
+    return clientIpResolver.resolve(request);
   }
 }

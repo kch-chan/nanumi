@@ -2,7 +2,9 @@ package com.nanumi.api.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class JwtAuthenticationFilterTest {
 
   @Mock private JwtTokenProvider jwtTokenProvider;
+  @Mock private ActiveUserGuard activeUserGuard;
 
   private JwtAuthenticationFilter filter;
   private MockHttpServletRequest request;
@@ -38,10 +41,12 @@ class JwtAuthenticationFilterTest {
 
   @BeforeEach
   void setUp() {
-    filter = new JwtAuthenticationFilter(jwtTokenProvider);
+    filter = new JwtAuthenticationFilter(jwtTokenProvider, activeUserGuard);
     request = new MockHttpServletRequest();
     response = new MockHttpServletResponse();
     chain = new MockFilterChain();
+    // 대부분의 경우는 살아 있는 계정임. 탈퇴 상황은 아래 전용 테스트에서 따로 둠
+    when(activeUserGuard.isActive(anyInt())).thenReturn(true);
     SecurityContextHolder.clearContext();
   }
 
@@ -116,6 +121,33 @@ class JwtAuthenticationFilterTest {
 
     assertThat(currentAuthentication()).isNull();
     assertThat(chain.getRequest()).isNotNull();
+  }
+
+  // 액세스 토큰은 서버가 취소할 수 없음. 이걸 안 보면 탈퇴한 사람이 남은 15분 동안 그대로 통함
+  @Test
+  @DisplayName("탈퇴한 계정의 토큰이면 서명이 맞아도 인증하지 않음")
+  void 탈퇴한_계정은_거부() throws Exception {
+    request.addHeader("Authorization", "Bearer good-token");
+    when(jwtTokenProvider.resolveUserId("good-token", TokenType.ACCESS))
+        .thenReturn(Optional.of(42));
+    when(activeUserGuard.isActive(42)).thenReturn(false);
+
+    filter.doFilter(request, response, chain);
+
+    assertThat(currentAuthentication()).isNull();
+    // 여기서 막더라도 응답은 시큐리티가 만들어야 하므로 통과는 시킴
+    assertThat(chain.getRequest()).isNotNull();
+  }
+
+  // 토큰이 없을 때 DB 를 보러 가면 요청마다 헛된 조회가 생김
+  @Test
+  @DisplayName("토큰이 없으면 계정 상태를 보러 가지 않음")
+  void 토큰_없으면_조회_안함() throws Exception {
+    when(jwtTokenProvider.resolveUserId(eq(null), any())).thenReturn(Optional.empty());
+
+    filter.doFilter(request, response, chain);
+
+    verify(activeUserGuard, never()).isActive(anyInt());
   }
 
   @Test

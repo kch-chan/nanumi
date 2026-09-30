@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import axiosInstance from '../axiosInstance';
-import { useAuthStore } from '../../stores/authStore';
+import { AUTH_STORAGE_KEY, useAuthStore } from '../../stores/authStore';
 import type { UserResponse } from '../../types/auth';
 
 const user: UserResponse = {
@@ -219,6 +219,39 @@ describe('axiosInstance', () => {
     delete fresh.defaults.adapter;
     vi.unstubAllEnvs();
     vi.resetModules();
+  });
+
+  // 탭 두 개를 켜 두면 둘이 같은 리프레시 토큰으로 동시에 재발급을 부를 수 있음.
+  // 서버는 쓰인 토큰 행을 지우므로, 늦게 도착한 쪽은 "없는 토큰" 이 되어 재사용 공격으로 판단되고
+  // 그 계정의 모든 기기가 로그아웃됨. 그래서 부르기 직전에 저장소를 다시 읽어야 함
+  it('다른 탭이 토큰을 갈아 끼웠으면 저장소의 새 토큰으로 재발급한다', async () => {
+    // 이 탭의 메모리에는 옛 토큰이 들어 있음
+    useAuthStore.getState().setAuth({ accessToken: 'access', refreshToken: '옛-토큰', user });
+
+    // 다른 탭이 회전시킨 결과가 저장소에만 반영된 상태를 만듦
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ state: { refreshToken: '다른-탭이-받은-토큰', user, isLoggedIn: true }, version: 0 }),
+    );
+
+    const post = vi
+      .spyOn(axios, 'post')
+      .mockResolvedValue({ data: { accessToken: 'new', refreshToken: 'new-refresh' } });
+
+    let first = true;
+    useAdapter(() => {
+      if (first) {
+        first = false;
+        return { status: 401 };
+      }
+      return { status: 200, data: { ok: true } };
+    });
+
+    await axiosInstance.get('/users/me');
+
+    expect(post).toHaveBeenCalledWith('/api/auth/refresh', {
+      refreshToken: '다른-탭이-받은-토큰',
+    });
   });
 
   it('401 이 아닌 오류는 그대로 올려 보낸다', async () => {

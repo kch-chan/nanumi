@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '../stores/authStore';
+import { readStoredRefreshToken, useAuthStore } from '../stores/authStore';
 import type { TokenResponse } from '../types/auth';
 
 const LOGIN_PATH = '/login';
@@ -43,28 +43,52 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// 동시에 여러 요청이 401 을 받아도 리프레시는 한 번만 부르도록 진행 중인 약속을 들고 있음
+// 한 탭 안에서 여러 요청이 동시에 401 을 받아도 리프레시는 한 번만 부르도록 진행 중인 약속을 들고 있음
 let refreshPromise: Promise<string> | null = null;
 
-async function requestNewAccessToken(): Promise<string> {
-  const { refreshToken } = useAuthStore.getState();
-  if (!refreshToken) {
-    throw new Error('리프레시 토큰이 없음');
+// 탭이 여러 개 열려 있을 때 재발급을 한 번에 하나만 돌게 함
+//
+// 서버는 쓰인 리프레시 토큰 행을 지우고 새 행을 만듦(회전). 그래서 두 탭이 같은 토큰으로
+// 동시에 재발급을 부르면, 먼저 도착한 쪽이 성공하고 나중 쪽은 "없는 토큰" 이 되어
+// 서버가 재사용 공격으로 판단해 그 계정의 모든 기기를 로그아웃시킴.
+// 탭을 두 개 켜 둔 평범한 이용자가 갑자기 전부 로그아웃되는 것임
+//
+// Web Locks 는 같은 출처의 모든 탭이 공유하는 잠금이라 이 경합을 막아 줌.
+// 지원하지 않는 브라우저에서는 잠금 없이 그냥 진행함(전보다 나빠지지는 않음)
+const REFRESH_LOCK = 'nanumi-token-refresh';
+
+function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
+  const locks = navigator.locks;
+  if (!locks) {
+    return run();
   }
+  return locks.request(REFRESH_LOCK, run);
+}
 
-  // 인터셉터를 타지 않도록 기본 axios 로 부르되, 주소는 baseURL 을 붙여야 함.
-  // 여기서 '/api/auth/refresh' 처럼 상대 경로를 쓰면 요청이 백엔드가 아니라
-  // 프런트가 올라간 도메인으로 감. 배포 환경에서는 그쪽에 이 경로가 없으므로
-  // SPA rewrite 를 타서 index.html 이 200 으로 오거나 405/404 가 남.
-  // 그러면 accessToken 이 undefined 가 되어 재발급이 100% 실패하고,
-  // 액세스 토큰은 localStorage 에 남기지 않으므로 새로고침마다 로그아웃됨
-  const { data } = await axios.post<TokenResponse>(`${baseURL}/auth/refresh`, {
-    refreshToken,
+async function requestNewAccessToken(): Promise<string> {
+  return withRefreshLock(async () => {
+    // 잠금을 기다리는 동안 다른 탭이 토큰을 갈아 끼웠을 수 있음.
+    // 탭마다 zustand 상태가 따로라서 이 탭의 메모리는 옛 값을 들고 있으므로 저장소를 다시 봄.
+    // 옛 값으로 부르면 위에 적은 "모든 기기 로그아웃" 이 그대로 일어남
+    const refreshToken = readStoredRefreshToken() ?? useAuthStore.getState().refreshToken;
+    if (!refreshToken) {
+      throw new Error('리프레시 토큰이 없음');
+    }
+
+    // 인터셉터를 타지 않도록 기본 axios 로 부르되, 주소는 baseURL 을 붙여야 함.
+    // 여기서 '/api/auth/refresh' 처럼 상대 경로를 쓰면 요청이 백엔드가 아니라
+    // 프런트가 올라간 도메인으로 감. 배포 환경에서는 그쪽에 이 경로가 없으므로
+    // SPA rewrite 를 타서 index.html 이 200 으로 오거나 405/404 가 남.
+    // 그러면 accessToken 이 undefined 가 되어 재발급이 100% 실패하고,
+    // 액세스 토큰은 localStorage 에 남기지 않으므로 새로고침마다 로그아웃됨
+    const { data } = await axios.post<TokenResponse>(`${baseURL}/auth/refresh`, {
+      refreshToken,
+    });
+
+    // 서버가 리프레시 토큰도 새로 주므로(회전) 둘 다 갈아 끼움
+    useAuthStore.getState().setTokens(data);
+    return data.accessToken;
   });
-
-  // 서버가 리프레시 토큰도 새로 주므로(회전) 둘 다 갈아 끼움
-  useAuthStore.getState().setTokens(data);
-  return data.accessToken;
 }
 
 function goToLogin() {
