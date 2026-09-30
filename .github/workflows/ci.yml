@@ -13,10 +13,29 @@ jobs:
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has_projects: ${{ steps.detect.outputs.has_projects }}
+      deploy_config_changed: ${{ steps.deploy_config.outputs.changed }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      # 루트에만 있는 배포 설정(render.yaml, docker-compose.yml, 워크플로 등)이 바뀐 PR 은
+      # 아래 프로젝트 감지에서 아무것도 안 걸림. dirname 을 따라 올라가도 package.json/pom.xml 을
+      # 만나지 못해서 matrix 가 비고, 검사 전체가 건너뛰어짐.
+      # 그 변경만으로 배포가 깨질 수 있으므로 따로 표시해 둠
+      - name: 루트 배포 설정 변경 감지
+        id: deploy_config
+        run: |
+          PATTERN='^(render[.]yaml|docker-compose[.]yml|[.]github/workflows/|docker/|frontend/vercel[.]json$)'
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -E "$PATTERN" || true)
+          if [ -n "$CHANGED" ]; then
+            echo "바뀐 배포 설정:"
+            echo "$CHANGED" | sed 's/^/  /'
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "바뀐 배포 설정 없음"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 변경된 폴더 & 프로젝트 타입 감지
         id: detect
@@ -64,6 +83,88 @@ jobs:
           else
             echo "has_projects=true" >> "$GITHUB_OUTPUT"
           fi
+
+  # 배포 설정만 바뀐 PR 은 위 프로젝트 검사가 하나도 돌지 않음.
+  # 그 변경만으로 배포가 깨질 수 있으므로 형식과 참조 경로를 여기서 확인함
+  deploy-config:
+    name: "Check: 배포 설정"
+    needs: detect
+    if: needs.detect.outputs.deploy_config_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: YAML / JSON 형식 확인
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          import yaml
+
+          failed = []
+          for path in ['render.yaml', 'docker-compose.yml', *sorted(str(p) for p in pathlib.Path('.github/workflows').glob('*.yml'))]:
+              if not pathlib.Path(path).exists():
+                  continue
+              try:
+                  yaml.safe_load(pathlib.Path(path).read_text(encoding='utf-8'))
+                  print('  OK   ' + path)
+              except Exception as exc:
+                  failed.append(path)
+                  print('  FAIL ' + path + ': ' + str(exc))
+
+          for path in ['frontend/vercel.json']:
+              if not pathlib.Path(path).exists():
+                  continue
+              try:
+                  json.loads(pathlib.Path(path).read_text(encoding='utf-8'))
+                  print('  OK   ' + path)
+              except Exception as exc:
+                  failed.append(path)
+                  print('  FAIL ' + path + ': ' + str(exc))
+
+          sys.exit(1 if failed else 0)
+          PY
+
+      # render.yaml 이 가리키는 경로가 실제로 있는지 봄
+      # Dockerfile 경로가 틀려서 배포가 "open Dockerfile: no such file" 로 죽은 적이 있음
+      - name: render.yaml 참조 확인
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import sys
+
+          import yaml
+
+          blueprint = yaml.safe_load(pathlib.Path('render.yaml').read_text(encoding='utf-8'))
+          problems = []
+
+          for service in blueprint.get('services', []):
+              root = pathlib.Path(service.get('rootDir', '.'))
+
+              dockerfile = service.get('dockerfilePath')
+              if dockerfile and not (root / dockerfile).resolve().exists():
+                  problems.append('dockerfilePath 가 가리키는 파일이 없음: ' + str(root / dockerfile))
+
+              context = service.get('dockerContext')
+              if context and not (root / context).resolve().is_dir():
+                  problems.append('dockerContext 가 가리키는 폴더가 없음: ' + str(root / context))
+
+              # 비밀값이 파일에 그대로 적혀 있으면 git 에 올라감
+              for env in service.get('envVars', []):
+                  if 'value' not in env and not env.get('sync') is False:
+                      problems.append('envVars 의 ' + str(env.get('key')) + ' 에 value 도 sync:false 도 없음')
+
+          for problem in problems:
+              print('  FAIL ' + problem)
+          if not problems:
+              print('  OK   render.yaml 참조 확인')
+          sys.exit(1 if problems else 0)
+          PY
+
+      - name: docker compose 형식 확인
+        run: docker compose -f docker-compose.yml config --quiet
 
   check:
     name: "Check: ${{ matrix.project.dir }} (${{ matrix.project.type }})"
@@ -130,29 +231,29 @@ jobs:
             echo "test 스크립트 없음, skip"
           fi
 
+      # lint 와 test 는 타입 검사와 번들 생성까지 해 주지 않음.
+      # build 가 빠져 있으면 tsc 프로젝트 참조가 깨졌거나 번들이 안 만들어지는 변경이
+      # PR 검사를 통과하고, Vercel 배포에서 처음 실패함
+      - name: React - Build
+        if: matrix.project.type == 'node'
+        working-directory: ${{ matrix.project.dir }}
+        env:
+          # 배포 빌드는 이 값이 없으면 일부러 죽게 해 뒀음(axiosInstance.ts).
+          # 검사에서는 형태만 맞으면 되므로 진짜 주소일 필요가 없음
+          VITE_API_BASE_URL: https://ci.invalid/api
+        run: |
+          if grep -q '"build"' package.json; then
+            pnpm run build
+          else
+            echo "build 스크립트 없음, skip"
+          fi
+
       - name: Setup Java (Maven)
         if: matrix.project.type == 'maven'
         uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
-
-      # 시크릿이 실제로 등록돼 있는지만 확인함. 값은 찍지 않음
-      - name: GitHub Secrets 등록 확인
-        if: matrix.project.type == 'maven'
-        env:
-          PASSWORD_PEPPER: ${{ secrets.PASSWORD_PEPPER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
-        run: |
-          for name in PASSWORD_PEPPER DB_PASSWORD JWT_PRIVATE_KEY JWT_PUBLIC_KEY; do
-            if [ -n "${!name}" ]; then
-              echo "  $name: 등록됨"
-            else
-              echo "  $name: 없음 (운영 배포 전에 넣어야 함)"
-            fi
-          done
 
       - name: Spring Boot (Maven) - Verify
         if: matrix.project.type == 'maven'

@@ -21,6 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 요청 �
   private static final String BEARER_PREFIX = "Bearer ";
 
   private final JwtTokenProvider jwtTokenProvider;
+  private final ActiveUserGuard activeUserGuard;
 
   // HTTP 요청이 들어왔을 때 해당 Filter가 요청을 검사 처리하는 메서드
   @Override
@@ -30,6 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 요청 �
 
     jwtTokenProvider
         .resolveUserId(resolveToken(request), TokenType.ACCESS)
+        // 서명이 맞아도 탈퇴한 계정이면 인증하지 않음
+        // 액세스 토큰은 서버가 취소할 수 없어서, 이걸 안 보면 탈퇴 후에도 남은 15분 동안 통함
+        .filter(activeUserGuard::isActive)
         // Optional 값이 있으면 SecurityContext 에 인증 정보 넣음. 없으면 그냥 통과
         .ifPresent(
             userId ->

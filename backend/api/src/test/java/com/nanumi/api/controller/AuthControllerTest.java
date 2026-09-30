@@ -21,7 +21,9 @@ import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.exception.GlobalExceptionHandler;
+import com.nanumi.api.security.ClientIpResolver;
 import com.nanumi.api.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,13 +46,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AuthControllerTest {
 
   @Mock private AuthService authService;
+  @Mock private ClientIpResolver clientIpResolver;
 
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUp() {
+    // 어느 값을 접속자 IP 로 볼지는 ClientIpResolver 의 일이고 그쪽에서 따로 확인함.
+    // 여기서는 "컨트롤러가 그 값을 서비스로 넘기는지" 만 보면 되므로 연결 주소를 그대로 돌려줌
+    when(clientIpResolver.resolve(any()))
+        .thenAnswer(
+            invocation -> invocation.getArgument(0, HttpServletRequest.class).getRemoteAddr());
+
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new AuthController(authService))
+        MockMvcBuilders.standaloneSetup(new AuthController(authService, clientIpResolver))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }

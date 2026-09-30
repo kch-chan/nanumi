@@ -1,6 +1,7 @@
 package com.nanumi.api.config;
 
 import com.nanumi.api.exception.ErrorCode;
+import com.nanumi.api.security.ActiveUserGuard;
 import com.nanumi.api.security.JwtAuthenticationFilter;
 import com.nanumi.api.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,6 +48,7 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       JwtTokenProvider jwtTokenProvider,
+      ActiveUserGuard activeUserGuard,
       CorsConfigurationSource corsConfigurationSource)
       throws Exception {
     // 쿠키나 세션 기반이 아니라 JWT 기반이므로 CSRF(Cross-Site Request Forgery) 방어를 끔
@@ -96,7 +98,7 @@ public class SecurityConfig {
                             writeError(response, ErrorCode.ACCESS_DENIED)))
         // jwt 검증 필터 추가
         .addFilterBefore(
-            new JwtAuthenticationFilter(jwtTokenProvider), // 너 누구니
+            new JwtAuthenticationFilter(jwtTokenProvider, activeUserGuard), // 너 누구니
             UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

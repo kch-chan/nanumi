@@ -20,12 +20,18 @@ services:
     dockerfilePath: ./backend/api/Dockerfile
     # Dockerfile 안에서 COPY 하는 경로의 기준점. 이게 없으면 mvnw 를 못 찾음
     dockerContext: ./backend/api
+    # 무료 등급은 15분 요청이 없으면 인스턴스를 멈춤(다음 요청이 수십 초 걸림).
+    # 백업·복구·장애 대응 절차는 docs/deployment.md 의 "운영 점검과 복구" 항목에 적어 둠
     plan: free
     region: singapore
     branch: main
     # 기동에 실패한 이미지로 교체되지 않게 함
     # /actuator/health 는 DB 까지 확인해서 Neon 이 자면 DOWN 이 됨.
     # 그러면 Render 가 멀쩡한 인스턴스를 재시작함. liveness 는 앱만 확인함
+    # DB 는 일부러 넣지 않음. /actuator/health 나 readiness 를 넣으면 Neon 이 유휴 중지된 동안
+    # DOWN 이 되어 멀쩡한 인스턴스가 재시작됨. DB 상태는 배포 판정이 아니라 감시로 봐야 함
+    #   앱 생존:   /actuator/health/liveness   <- 이 경로
+    #   DB 포함:   /actuator/health/readiness  <- 감시·알림에서 볼 경로
     healthCheckPath: /actuator/health/liveness
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -76,7 +82,14 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
 
-      # Render 는 프록시 뒤에 있으므로 원래 접속자 IP 를 헤더로 받음
-      # 이게 없으면 로그인 시도 제한이 모든 요청을 같은 IP 로 보게 됨
-      - key: FORWARD_HEADERS_STRATEGY
-        value: framework
+      # ----- 접속자 IP -----
+      # Render 는 프록시 한 대 뒤에 앱을 둠. 그러면 앱이 보는 연결 주소는 프록시의 내부 IP 라서,
+      # 이 값이 없으면 로그인·가입 시도 제한이 모든 이용자를 같은 사람으로 봄.
+      # 누군가 다섯 번 가입한 뒤에는 나머지 사람 전부가 429 를 받게 되므로 반드시 넣어야 함
+      #
+      # 스프링의 FORWARD_HEADERS_STRATEGY 는 쓰지 않음(대시보드에 남아 있으면 지울 것).
+      # 그 기능은 X-Forwarded-For 목록의 "맨 앞" 을 접속자로 보는데, 맨 앞은 요청하는 쪽이
+      # 지어낼 수 있는 자리라서 헤더만 바꿔 가며 제한을 통과할 수 있음.
+      # 이 프로젝트는 목록의 뒤에서부터 읽음(ClientIpResolver)
+      - key: TRUSTED_PROXY_COUNT
+        value: 1
