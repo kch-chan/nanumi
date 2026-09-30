@@ -34,6 +34,12 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+jwt:
+  # 키 파일이 없으면 기동할 때 한 쌍 만들어 씀
+  # keys/*.pem 은 .gitignore 대상이라 CI 체크아웃에는 없음.
+  # 개발 프로필에만 켜 두면 로컬에서는 키가 있어서 통과하고 CI 에서만 깨짐
+  generate-key-if-missing: true
+
 nanumi:
   security:
     password:
