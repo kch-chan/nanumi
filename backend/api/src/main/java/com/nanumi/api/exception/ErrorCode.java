@@ -21,6 +21,7 @@ public enum ErrorCode {
 
   // 로그인 무차별 대입을 막을 때 씀. 남은 시간은 알려 주지 않음
   LOGIN_ATTEMPT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요."),
+  SIGNUP_ATTEMPT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "가입 시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요."),
 
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
   WITHDRAWN_USER(HttpStatus.FORBIDDEN, "이미 탈퇴한 계정입니다."),

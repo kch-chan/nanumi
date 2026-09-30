@@ -12,9 +12,9 @@ class NanumiPasswordPropertiesTest {
 
   // 반복 횟수는 해시 문자열에 같이 적히므로 나중에 올려도 기존 계정은 그대로 로그인됨
   @Test
-  @DisplayName("반복 횟수 기본값은 21만 회임")
+  @DisplayName("반복 횟수 기본값은 10만 회임")
   void 반복_횟수_기본값() {
-    assertThat(new NanumiPasswordProperties().getIterations()).isEqualTo(210_000);
+    assertThat(new NanumiPasswordProperties().getIterations()).isEqualTo(100_000);
   }
 
   // 설정을 빠뜨렸을 때 무엇으로 해싱됐는지 알 수 있도록 기본값은 빈 문자열임

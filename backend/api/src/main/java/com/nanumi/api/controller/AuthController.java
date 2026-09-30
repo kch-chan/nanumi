@@ -1,6 +1,7 @@
 package com.nanumi.api.controller;
 
 import com.nanumi.api.dto.request.LoginRequest;
+import com.nanumi.api.dto.request.LogoutRequest;
 import com.nanumi.api.dto.request.RefreshRequest;
 import com.nanumi.api.dto.request.SignupRequest;
 import com.nanumi.api.dto.request.WithdrawalRequest;
@@ -29,8 +30,11 @@ public class AuthController {
   private final AuthService authService;
 
   @PostMapping("/signup")
-  public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
+  public ResponseEntity<SignupResponse> signup(
+      @Valid @RequestBody SignupRequest request, HttpServletRequest servletRequest) {
+    // 가입 횟수를 IP 로 세기 때문에 IP 를 같이 넘김
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(authService.signup(request, resolveClientIp(servletRequest)));
   }
 
   @PostMapping("/login")
@@ -45,9 +49,14 @@ public class AuthController {
     return ResponseEntity.ok(authService.refresh(request));
   }
 
+  // 몸통은 선택임. 리프레시 토큰을 담아 보내면 그 기기만 로그아웃하고,
+  // 없으면 이 계정의 모든 기기를 로그아웃함
   @PostMapping("/logout")
-  public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal Integer userId) {
-    return ResponseEntity.ok(authService.logout(userId));
+  public ResponseEntity<LogoutResponse> logout(
+      @AuthenticationPrincipal Integer userId,
+      @Valid @RequestBody(required = false) LogoutRequest request) {
+    return ResponseEntity.ok(
+        authService.logout(userId, request == null ? null : request.refreshToken()));
   }
 
   @PostMapping("/withdrawal")

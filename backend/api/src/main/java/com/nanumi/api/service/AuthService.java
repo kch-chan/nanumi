@@ -11,14 +11,17 @@ import com.nanumi.api.dto.response.TokenResponse;
 import com.nanumi.api.dto.response.UserResponse;
 import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.entity.Account;
+import com.nanumi.api.entity.RefreshToken;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.repository.AccountRepository;
+import com.nanumi.api.repository.RefreshTokenRepository;
 import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
 import com.nanumi.api.security.LoginAttemptService;
+import com.nanumi.api.security.SignupAttemptService;
 import com.nanumi.api.security.password.NanumiPasswordEncoder;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +29,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,12 @@ public class AuthService {
   private final NanumiPasswordEncoder nanumiPasswordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final LoginAttemptService loginAttemptService;
+  private final SignupAttemptService signupAttemptService;
+  private final RefreshTokenRepository refreshTokenRepository;
+
+  // 한 계정이 동시에 유지할 수 있는 기기 수임
+  // 상한이 없으면 로그인할 때마다 토큰 행이 하나씩 늘어나 끝없이 쌓임
+  private static final int MAX_DEVICES_PER_ACCOUNT = 5;
 
   // 없는 계정으로 로그인을 시도해도 있을 때와 같은 시간을 쓰려고 미리 만들어 두는 해시임
   // 아무도 모르는 값으로 만들어서 이 해시에 맞는 비밀번호는 존재하지 않음
@@ -57,7 +67,12 @@ public class AuthService {
     this.dummyPasswordHash = nanumiPasswordEncoder.encode(UUID.randomUUID().toString());
   }
 
-  public SignupResponse signup(SignupRequest request) {
+  public SignupResponse signup(SignupRequest request, String clientIp) {
+    // 가입 경로는 인증이 필요 없으므로 IP 단위로 횟수를 제한함
+    // 막지 않으면 계정을 대량으로 만들거나, 409 응답만 보고 가입된 이메일을 훑을 수 있음
+    signupAttemptService.checkBlocked(clientIp);
+    signupAttemptService.recordAttempt(clientIp);
+
     String email = normalizeEmail(request.email());
 
     if (accountEntityRepository.existsByEmail(email)) {
@@ -148,17 +163,28 @@ public class AuthService {
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // 로그아웃했거나 담아 둔 토큰의 기한이 지난 경우임
-    if (!account.hasRefreshToken() || account.isExpired()) {
-      throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+    RefreshToken stored =
+        refreshTokenRepository
+            .findByTokenHash(hashRefreshToken(request.refreshToken()))
+            .orElse(null);
+
+    if (stored == null) {
+      // 서명은 맞는데 담아 둔 행이 없음
+      // 이미 회전돼 버려진 토큰을 누군가 뒤늦게 쓰는 상황일 수 있으므로,
+      // 이 계정의 다른 기기 토큰까지 같이 끊고 전부 다시 로그인하게 함
+      refreshTokenRepository.deleteByAccount_Id(account.getId());
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
-    if (!matchesStoredRefreshToken(account, request.refreshToken())) {
-      // 서명은 맞는데 담아 둔 것과 다름
-      // 이미 한 번 회전돼서 버려진 토큰을 누군가 뒤늦게 쓰는 상황일 수 있으므로,
-      // 진짜 주인이 쓰던 토큰까지 같이 끊고 다시 로그인하게 함
-      account.clearRefreshToken();
+    // 다른 계정의 토큰이 서명을 통과하는 일은 없지만, 확인해서 손해 볼 것이 없음
+    if (stored.getAccount().getId() != account.getId()) {
+      refreshTokenRepository.delete(stored);
       throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+
+    if (stored.isExpired()) {
+      refreshTokenRepository.delete(stored);
+      throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
     }
 
     User user = account.getUser();
@@ -166,19 +192,33 @@ public class AuthService {
       throw new CustomException(ErrorCode.WITHDRAWN_USER);
     }
 
+    // 회전: 쓰인 토큰은 버리고 새로 하나 만듦. 다른 기기의 토큰은 그대로 둠
+    refreshTokenRepository.delete(stored);
+
     String accessToken = jwtTokenProvider.createAccessToken(user.getId());
     String refreshToken = issueRefreshToken(account, user);
 
     return TokenResponse.of(accessToken, refreshToken);
   }
 
-  public LogoutResponse logout(Integer userId) {
+  // 리프레시 토큰을 같이 보내면 그 기기만 로그아웃함
+  // 보내지 않으면 이 계정의 모든 기기를 로그아웃함(토큰을 잃어버렸을 때를 위한 길)
+  public LogoutResponse logout(Integer userId, String refreshToken) {
     Account account =
         accountEntityRepository
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    account.clearRefreshToken();
+    if (refreshToken == null || refreshToken.isBlank()) {
+      refreshTokenRepository.deleteByAccount_Id(account.getId());
+      return LogoutResponse.of();
+    }
+
+    refreshTokenRepository
+        .findByTokenHash(hashRefreshToken(refreshToken))
+        // 남의 토큰을 지워 달라고 보내는 것을 막음
+        .filter(stored -> stored.getAccount().getId() == account.getId())
+        .ifPresent(refreshTokenRepository::delete);
 
     return LogoutResponse.of();
   }
@@ -200,26 +240,42 @@ public class AuthService {
 
     // 탈퇴 사유는 개인정보 수집·이용 동의에 적어 둔 선택 항목이라 받은 값을 담아 둠
     user.withdraw(blankToNull(request.reason()));
-    account.clearRefreshToken();
+    // 탈퇴는 기기를 가리지 않고 전부 끊음
+    refreshTokenRepository.deleteByAccount_Id(account.getId());
 
     return WithdrawalResponse.of(user.getWithdrawnAt());
   }
 
-  // 리프레시 토큰을 새로 만들고, DB 에는 해시만 담아 둠
+  // 리프레시 토큰을 새로 만들고, DB 에는 해시만 담은 행을 하나 추가함
   private String issueRefreshToken(Account account, User user) {
     String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-    account.updateRefreshToken(
-        hashRefreshToken(refreshToken),
-        LocalDateTime.now().plusSeconds(jwtTokenProvider.getRefreshTokenExpiration() / 1000));
+    refreshTokenRepository.save(
+        RefreshToken.builder()
+            .account(account)
+            .tokenHash(hashRefreshToken(refreshToken))
+            .expiresAt(
+                LocalDateTime.now()
+                    .plusSeconds(jwtTokenProvider.getRefreshTokenExpiration() / 1000))
+            .build());
+
+    pruneRefreshTokens(account);
 
     return refreshToken;
   }
 
-  private boolean matchesStoredRefreshToken(Account account, String refreshToken) {
-    return MessageDigest.isEqual(
-        account.getRefreshTokenHash().getBytes(StandardCharsets.UTF_8),
-        hashRefreshToken(refreshToken).getBytes(StandardCharsets.UTF_8));
+  // 만료된 행을 치우고, 기기 수가 상한을 넘으면 오래된 것부터 지움
+  private void pruneRefreshTokens(Account account) {
+    List<RefreshToken> tokens =
+        refreshTokenRepository.findByAccount_IdOrderByCreatedAtAsc(account.getId());
+
+    tokens.stream().filter(RefreshToken::isExpired).forEach(refreshTokenRepository::delete);
+
+    List<RefreshToken> alive = tokens.stream().filter(token -> !token.isExpired()).toList();
+    int excess = alive.size() - MAX_DEVICES_PER_ACCOUNT;
+    for (int i = 0; i < excess; i++) {
+      refreshTokenRepository.delete(alive.get(i));
+    }
   }
 
   // 토큰 원문 대신 SHA-256 16진수 64자를 담음

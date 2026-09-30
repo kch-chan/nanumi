@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class NanumiPasswordProperties {
 
   // PBKDF2 반복 횟수임. 값을 올려도 기존 해시는 자기 반복 횟수로 검증되므로 로그인은 계속 됨
-  private int iterations = 210_000;
+  private int iterations = 100_000;
   private String pepper = "";
 
   // pepper 가 잘못 들어온 채로 뜨는 것을 막음

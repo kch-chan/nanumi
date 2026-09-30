@@ -31,6 +31,9 @@ services:
       # postgres:18 부터는 /var/lib/postgresql 에 붙임(안쪽에 버전별 폴더를 둠).
       # 17 처럼 .../data 에 붙이면 버전 업그레이드 때 기동이 실패함
       - nanumi-db-data:/var/lib/postgresql
+      # 컨테이너를 처음 만들 때 테스트용 DB(nanumi_test)도 함께 만듦
+      # 테스트가 개발 데이터를 건드리지 않게 하려는 것임
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U abc -d nanumi_dev"]
       interval: 5s
