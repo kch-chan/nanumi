@@ -1,6 +1,8 @@
 package com.nanumi.api.security.password;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,5 +34,39 @@ class NanumiPasswordPropertiesTest {
 
     assertThat(properties.getIterations()).isEqualTo(310_000);
     assertThat(properties.getPepper()).isEqualTo("운영용-비밀값");
+  }
+
+  // 여기부터는 기동 가드임
+  // @ConfigurationProperties 는 환경 변수가 없을 때 예외를 던지지 않고 "${PASSWORD_PEPPER}" 라는
+  // 글자를 그대로 넣어 버림. 그 상태로 만든 해시는 나중에 올바른 pepper 로 검증되지 않으므로
+  // 비밀번호가 조용히 전부 망가짐. 그래서 기동 단계에서 끊어야 함
+  @Test
+  @DisplayName("pepper 가 비어 있으면 기동을 막음")
+  void pepper_없으면_기동_실패() {
+    NanumiPasswordProperties properties = new NanumiPasswordProperties();
+
+    assertThatThrownBy(properties::valueCheck)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("PASSWORD_PEPPER");
+  }
+
+  @Test
+  @DisplayName("치환되지 않은 자리표시자가 들어오면 기동을 막음")
+  void 자리표시자_그대로면_기동_실패() {
+    NanumiPasswordProperties properties = new NanumiPasswordProperties();
+    properties.setPepper("${PASSWORD_PEPPER}");
+
+    assertThatThrownBy(properties::valueCheck)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("자리표시자");
+  }
+
+  @Test
+  @DisplayName("제대로 된 pepper 면 통과함")
+  void 정상_pepper() {
+    NanumiPasswordProperties properties = new NanumiPasswordProperties();
+    properties.setPepper("f4hbFBEic/wCmEN/UqqLpgD4rkl33xoDFDd4lkquzQM=");
+
+    assertThatCode(properties::valueCheck).doesNotThrowAnyException();
   }
 }

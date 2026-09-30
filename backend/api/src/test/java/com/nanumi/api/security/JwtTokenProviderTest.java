@@ -60,9 +60,9 @@ class JwtTokenProviderTest {
   void 액세스_토큰_왕복() throws Exception {
     JwtTokenProvider provider = providerWith(900_000L);
 
-    String token = provider.createAccessToken(42L);
+    String token = provider.createAccessToken(42);
 
-    assertThat(provider.resolveUserId(token, TokenType.ACCESS)).contains(42L);
+    assertThat(provider.resolveUserId(token, TokenType.ACCESS)).contains(42);
   }
 
   // 종류를 구분하지 않으면 14일짜리 리프레시 토큰을 액세스 토큰처럼 쓸 수 있게 됨
@@ -71,9 +71,9 @@ class JwtTokenProviderTest {
   void 리프레시_토큰은_액세스로_못_씀() throws Exception {
     JwtTokenProvider provider = providerWith(900_000L);
 
-    String refresh = provider.createRefreshToken(42L);
+    String refresh = provider.createRefreshToken(42);
 
-    assertThat(provider.resolveUserId(refresh, TokenType.REFRESH)).contains(42L);
+    assertThat(provider.resolveUserId(refresh, TokenType.REFRESH)).contains(42);
     assertThat(provider.resolveUserId(refresh, TokenType.ACCESS)).isEmpty();
   }
 
@@ -83,7 +83,7 @@ class JwtTokenProviderTest {
     // 유효 기간을 음수로 줘서 이미 만료된 토큰을 만듦
     JwtTokenProvider provider = providerWith(-1_000L);
 
-    String token = provider.createAccessToken(42L);
+    String token = provider.createAccessToken(42);
 
     assertThat(provider.resolveUserId(token, TokenType.ACCESS)).isEmpty();
   }
@@ -93,7 +93,7 @@ class JwtTokenProviderTest {
   void 망가진_토큰은_거부됨() throws Exception {
     JwtTokenProvider provider = providerWith(900_000L);
 
-    String token = provider.createAccessToken(42L);
+    String token = provider.createAccessToken(42);
 
     assertThat(provider.resolveUserId(token + "x", TokenType.ACCESS)).isEmpty();
     assertThat(provider.resolveUserId("전혀 토큰이 아님", TokenType.ACCESS)).isEmpty();

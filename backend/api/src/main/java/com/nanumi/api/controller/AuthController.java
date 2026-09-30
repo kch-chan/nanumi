@@ -46,13 +46,13 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal Long userId) {
+  public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal Integer userId) {
     return ResponseEntity.ok(authService.logout(userId));
   }
 
   @PostMapping("/withdrawal")
   public ResponseEntity<WithdrawalResponse> withdraw(
-      @AuthenticationPrincipal Long userId, @Valid @RequestBody WithdrawalRequest request) {
+      @AuthenticationPrincipal Integer userId, @Valid @RequestBody WithdrawalRequest request) {
     return ResponseEntity.ok(authService.withdraw(userId, request));
   }
 

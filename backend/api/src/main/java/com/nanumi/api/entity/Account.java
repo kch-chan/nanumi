@@ -37,7 +37,7 @@ public class Account {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private int id;
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -47,7 +47,7 @@ public class Account {
   private String email;
 
   // NanumiPasswordEncoder 가 만드는 해시 길이에 맞춤
-  // 접두사·버전·반복 횟수에 salt(22자)와 hash(43자)를 이어 붙여서 기본값 기준 83자가 나옴
+  // 접두사·버전·반복 횟수에 salt(22자)와 hash(43자)를 이어 붙여서 기본값 기준 83자
   @Column(nullable = true, length = 83)
   private String password;
 
@@ -60,8 +60,6 @@ public class Account {
   private LocalDateTime updatedAt;
 
   // 리프레시 토큰을 그대로 담지 않고 SHA-256 해시만 담음
-  // 토큰 원문을 담아 두면 DB 가 유출됐을 때 그대로 로그인에 쓸 수 있는 자격 증명이 되기 때문임
-  // 길이도 64자로 고정돼서 MySQL utf8mb4 인덱스 상한(3072바이트)에 걸리지 않음
   @Column(name = "refresh_token_hash", length = REFRESH_TOKEN_HASH_LENGTH)
   private String refreshTokenHash;
 

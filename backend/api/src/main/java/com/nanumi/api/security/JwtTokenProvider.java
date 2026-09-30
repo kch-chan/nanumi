@@ -63,11 +63,11 @@ public class JwtTokenProvider {
     return readPem(location, type);
   }
 
-  public String createAccessToken(Long userId) {
+  public String createAccessToken(Integer userId) {
     return createToken(userId, TokenType.ACCESS, jwtConfig.getAccessTokenExpiration());
   }
 
-  public String createRefreshToken(Long userId) {
+  public String createRefreshToken(Integer userId) {
     return createToken(userId, TokenType.REFRESH, jwtConfig.getRefreshTokenExpiration());
   }
 
@@ -77,7 +77,7 @@ public class JwtTokenProvider {
 
   // 서명·만료·종류를 한 번에 확인하고, 통과하면 회원 번호를 돌려줌
   // 예전에는 validateToken 과 getUserId 에서 토큰을 두 번 파싱했는데 한 번으로 합침
-  public Optional<Long> resolveUserId(String token, TokenType expectedType) {
+  public Optional<Integer> resolveUserId(String token, TokenType expectedType) {
     if (token == null || token.isBlank()) {
       return Optional.empty();
     }
@@ -90,14 +90,14 @@ public class JwtTokenProvider {
         return Optional.empty();
       }
 
-      return Optional.of(Long.valueOf(claims.getSubject()));
+      return Optional.of(Integer.valueOf(claims.getSubject()));
     } catch (JwtException | IllegalArgumentException e) {
       // 서명이 틀렸거나 만료됐거나 subject 가 숫자가 아님. 어느 쪽이든 못 믿는 토큰임
       return Optional.empty();
     }
   }
 
-  private String createToken(Long userId, TokenType type, long expiration) {
+  private String createToken(Integer userId, TokenType type, long expiration) {
     Date now = new Date();
     Date expiry = new Date(now.getTime() + expiration);
 

@@ -77,7 +77,7 @@ class AuthServiceTest {
     authService.initDummyPasswordHash();
   }
 
-  private User userWithId(long id) {
+  private User userWithId(int id) {
     User user = User.builder().nickname("나눔이").aptName("행복아파트").build();
     ReflectionTestUtils.setField(user, "id", id);
     return user;
@@ -212,7 +212,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("비밀번호가 틀리면 실패로 세고 같은 오류를 냄")
     void 비밀번호_불일치() {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(false);
 
@@ -228,7 +228,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("탈퇴한 계정이면 거부함")
     void 탈퇴한_계정() {
-      User user = userWithId(1L);
+      User user = userWithId(1);
       user.withdraw("그냥");
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(accountOf(user)));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
@@ -242,12 +242,12 @@ class AuthServiceTest {
     @Test
     @DisplayName("성공하면 토큰 두 개를 내주고 실패 기록을 지움")
     void 로그인_성공() {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
       when(passwordEncoder.upgradeEncoding(STORED_HASH)).thenReturn(false);
-      when(jwtTokenProvider.createAccessToken(1L)).thenReturn("access-token");
-      when(jwtTokenProvider.createRefreshToken(1L)).thenReturn("refresh-token");
+      when(jwtTokenProvider.createAccessToken(1)).thenReturn("access-token");
+      when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
       LoginResponse response = authService.login(request, CLIENT_IP);
@@ -261,12 +261,12 @@ class AuthServiceTest {
     @Test
     @DisplayName("리프레시 토큰은 해시해서 담음")
     void 리프레시_토큰은_해시로_담김() throws Exception {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
       when(passwordEncoder.upgradeEncoding(STORED_HASH)).thenReturn(false);
-      when(jwtTokenProvider.createAccessToken(1L)).thenReturn("access-token");
-      when(jwtTokenProvider.createRefreshToken(1L)).thenReturn("refresh-token");
+      when(jwtTokenProvider.createAccessToken(1)).thenReturn("access-token");
+      when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
       authService.login(request, CLIENT_IP);
@@ -281,13 +281,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("옛 방식 해시면 로그인할 때 새로 해싱해서 갱신함")
     void 옛_해시는_갱신됨() {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
       when(passwordEncoder.upgradeEncoding(STORED_HASH)).thenReturn(true);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn("$nanumi$1$210000$new$hash");
-      when(jwtTokenProvider.createAccessToken(1L)).thenReturn("access-token");
-      when(jwtTokenProvider.createRefreshToken(1L)).thenReturn("refresh-token");
+      when(jwtTokenProvider.createAccessToken(1)).thenReturn("access-token");
+      when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
       authService.login(request, CLIENT_IP);
@@ -315,8 +315,8 @@ class AuthServiceTest {
     @DisplayName("계정을 못 찾으면 404 를 던짐")
     void 계정_없음() {
       when(jwtTokenProvider.resolveUserId(anyString(), eq(TokenType.REFRESH)))
-          .thenReturn(Optional.of(1L));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
+          .thenReturn(Optional.of(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> authService.refresh(new RefreshRequest("token")))
           .isInstanceOf(CustomException.class)
@@ -327,10 +327,10 @@ class AuthServiceTest {
     @Test
     @DisplayName("로그아웃한 계정이면 만료로 처리함")
     void 담아_둔_토큰_없음() {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       when(jwtTokenProvider.resolveUserId(anyString(), eq(TokenType.REFRESH)))
-          .thenReturn(Optional.of(1L));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
+          .thenReturn(Optional.of(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
 
       assertThatThrownBy(() -> authService.refresh(new RefreshRequest("token")))
           .isInstanceOf(CustomException.class)
@@ -343,10 +343,10 @@ class AuthServiceTest {
     @Test
     @DisplayName("담아 둔 것과 다른 토큰이 오면 세션을 통째로 끊음")
     void 재사용_감지() throws Exception {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       account.updateRefreshToken(sha256Hex("원래-토큰"), LocalDateTime.now().plusDays(1));
-      when(jwtTokenProvider.resolveUserId("다른-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1L));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
+      when(jwtTokenProvider.resolveUserId("다른-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
 
       assertThatThrownBy(() -> authService.refresh(new RefreshRequest("다른-토큰")))
           .isInstanceOf(CustomException.class)
@@ -359,12 +359,12 @@ class AuthServiceTest {
     @Test
     @DisplayName("성공하면 토큰 두 개를 새로 내주고 담아 둔 해시도 바뀜")
     void 재발급_성공() throws Exception {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       account.updateRefreshToken(sha256Hex("옛-토큰"), LocalDateTime.now().plusDays(1));
-      when(jwtTokenProvider.resolveUserId("옛-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1L));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
-      when(jwtTokenProvider.createAccessToken(1L)).thenReturn("새-액세스");
-      when(jwtTokenProvider.createRefreshToken(1L)).thenReturn("새-리프레시");
+      when(jwtTokenProvider.resolveUserId("옛-토큰", TokenType.REFRESH)).thenReturn(Optional.of(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      when(jwtTokenProvider.createAccessToken(1)).thenReturn("새-액세스");
+      when(jwtTokenProvider.createRefreshToken(1)).thenReturn("새-리프레시");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
       TokenResponse response = authService.refresh(new RefreshRequest("옛-토큰"));
@@ -382,11 +382,11 @@ class AuthServiceTest {
     @Test
     @DisplayName("로그아웃하면 담아 둔 리프레시 토큰을 지움")
     void 로그아웃() throws Exception {
-      Account account = accountOf(userWithId(1L));
+      Account account = accountOf(userWithId(1));
       account.updateRefreshToken(sha256Hex("토큰"), LocalDateTime.now().plusDays(1));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
 
-      authService.logout(1L);
+      authService.logout(1);
 
       assertThat(account.hasRefreshToken()).isFalse();
     }
@@ -394,11 +394,11 @@ class AuthServiceTest {
     @Test
     @DisplayName("탈퇴할 때 비밀번호가 틀리면 거부함")
     void 탈퇴_비밀번호_불일치() {
-      Account account = accountOf(userWithId(1L));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
+      Account account = accountOf(userWithId(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(false);
 
-      assertThatThrownBy(() -> authService.withdraw(1L, new WithdrawalRequest(RAW_PASSWORD, "사유")))
+      assertThatThrownBy(() -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "사유")))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
@@ -407,13 +407,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("탈퇴하면 상태가 바뀌고 리프레시 토큰도 지워짐")
     void 탈퇴_성공() throws Exception {
-      User user = userWithId(1L);
+      User user = userWithId(1);
       Account account = accountOf(user);
       account.updateRefreshToken(sha256Hex("토큰"), LocalDateTime.now().plusDays(1));
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(account));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
 
-      authService.withdraw(1L, new WithdrawalRequest(RAW_PASSWORD, "이사 갑니다"));
+      authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "이사 갑니다"));
 
       assertThat(user.isWithdrawn()).isTrue();
       assertThat(user.getWithdrawalReason()).isEqualTo("이사 갑니다");
@@ -423,11 +423,11 @@ class AuthServiceTest {
     @Test
     @DisplayName("이미 탈퇴한 계정이면 거부함")
     void 이미_탈퇴함() {
-      User user = userWithId(1L);
+      User user = userWithId(1);
       user.withdraw(null);
-      when(accountRepository.findByUser_Id(1L)).thenReturn(Optional.of(accountOf(user)));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(accountOf(user)));
 
-      assertThatThrownBy(() -> authService.withdraw(1L, new WithdrawalRequest(RAW_PASSWORD, null)))
+      assertThatThrownBy(() -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, null)))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.WITHDRAWN_USER);
