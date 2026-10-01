@@ -22,6 +22,11 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
+  lifecycle:
+    # server.shutdown: graceful 로 내려갈 때 처리 중인 요청을 기다릴 최대 시간임
+    # 이 시간이 지나면 남은 요청을 끊고 내려감
+    timeout-per-shutdown-phase: 20s
+
   datasource:
     driver-class-name: org.postgresql.Driver
 
@@ -129,6 +134,13 @@ server:
   # getRemoteAddr() 를 "목록의 맨 앞" 값으로 바꿔 놓는데, 맨 앞은 요청하는 쪽이 지어낼 수 있는 자리임
   # 접속자 IP 는 대신 ClientIpResolver 가 목록의 뒤에서부터 읽음(trusted-proxy-count)
   forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+
+  # 종료 신호를 받으면 처리 중인 요청을 끝낸 뒤에 내려감
+  # 기본값(immediate)이면 재배포할 때 그 순간 처리 중이던 요청이 끊겨서
+  # 가입·탈퇴 같은 쓰기 요청이 중간에 잘릴 수 있음.
+  # Render 는 SIGTERM 을 보내고 잠시 기다리므로 그 시간을 이렇게 씀
+  # (기다릴 최대 시간은 위 spring.lifecycle.timeout-per-shutdown-phase 에 있음)
+  shutdown: graceful
 
 ---
 # ===== 개발 =================================================================

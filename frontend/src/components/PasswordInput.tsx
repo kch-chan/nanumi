@@ -28,8 +28,13 @@ function PasswordInput({
         <button
           type="button"
           onClick={() => setIsVisible((prev) => !prev)}
+          // 보기/숨기기는 보조 기능이라 Tab 순서에서 빼 둠
+          // 그래서 폼을 키보드로 채울 때 이메일 -> 비밀번호 -> 제출 로 바로 이어짐
           tabIndex={-1}
-          className="translate-y-1 pointer-events-auto text-stone-400 hover:text-stone-600 focus-visible:outline-none"
+          // SVG 는 읽히지 않으므로 이게 없으면 스크린 리더에 그냥 "버튼" 으로만 들림
+          aria-label={isVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
+          aria-pressed={isVisible}
+          className="pointer-events-auto flex items-center text-stone-400 hover:text-stone-600 focus-visible:outline-none"
         >
           {isVisible ? <EyeOffIcon /> : <EyeIcon />}
         </button>

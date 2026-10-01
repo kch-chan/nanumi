@@ -36,6 +36,7 @@ function LoginForm() {
         label="이메일"
         type="email"
         placeholder="example@apt.com"
+        autoComplete="email"
         error={errors.email?.message}
         {...register('email')}
       />
@@ -43,12 +44,17 @@ function LoginForm() {
       <PasswordInput
         label="비밀번호"
         placeholder="비밀번호를 입력하세요"
+        autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}
       />
 
+      {/* 서버는 어느 칸이 틀렸는지 알려 주지 않음(계정 존재 여부가 드러나므로).
+          그래서 칸 아래가 아니라 폼 하단에 둠. role="alert" 로 뜨는 즉시 읽히게 함 */}
       {login.isError && (
-        <p className="text-sm text-red-500">{getErrorMessage(login.error)}</p>
+        <p role="alert" className="text-sm text-red-500">
+          {getErrorMessage(login.error)}
+        </p>
       )}
 
       <Button type="submit" fullWidth isLoading={login.isPending}>

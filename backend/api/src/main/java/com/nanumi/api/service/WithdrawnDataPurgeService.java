@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 // 보유 기한이 지난 탈퇴 회원을 찾아 WithdrawnDataEraser 에게 넘김
 //
@@ -48,8 +47,13 @@ public class WithdrawnDataPurgeService {
 
   // 지운 사람 수를 돌려줌. 테스트에서 기준 시각을 넣어 부를 수 있게 열어 둠
   //
-  // 대상을 고르는 조회만 트랜잭션에 넣음. 지우는 일은 사람마다 따로 커밋됨
-  @Transactional(readOnly = true)
+  // 트랜잭션을 걸지 않음. 예전에는 @Transactional(readOnly = true) 가 붙어 있었는데,
+  // 그러면 안에서 부르는 eraser.erase() 가 REQUIRED 로 이 읽기 전용 트랜잭션에 참여해 버림.
+  // 읽기 전용 트랜잭션에서는 하이버네이트가 flush 를 하지 않아 delete 가 조용히 날아가고,
+  // DB 가 read-only 를 강제하면 그 자리에서 예외가 남. 즉 파기가 "성공한 것처럼" 끝날 수 있었음
+  //
+  // 대상을 고르는 조회는 스프링 데이터가 호출마다 트랜잭션을 열어 주므로 따로 걸 필요가 없고,
+  // 지우는 일은 사람마다 eraser 쪽에서 새 트랜잭션으로 커밋됨
   public int purgeExpired(LocalDateTime now) {
     LocalDateTime cutoff = now.minusDays(privacyProperties.getWithdrawnRetentionDays());
 

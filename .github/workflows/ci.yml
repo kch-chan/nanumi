@@ -219,21 +219,16 @@ jobs:
           cache: pnpm
           cache-dependency-path: ${{ matrix.project.dir }}/pnpm-lock.yaml
 
+      # --if-present 는 스크립트가 없으면 조용히 넘어감
+      # 예전에는 grep '"lint"' package.json 으로 확인했는데, 그 문자열이
+      # 의존성 이름 안에도 걸릴 수 있어서 패키지 매니저가 주는 기능으로 바꿈
       - name: React - Install & Lint
         if: matrix.project.type == 'node'
         working-directory: ${{ matrix.project.dir }}
         run: |
           pnpm install --frozen-lockfile
-          if grep -q '"lint"' package.json; then
-            pnpm run lint
-          else
-            echo "lint 스크립트 없음, skip"
-          fi
-          if grep -q '"test"' package.json; then
-            pnpm run test
-          else
-            echo "test 스크립트 없음, skip"
-          fi
+          pnpm run lint --if-present
+          pnpm run test --if-present
 
       # lint 와 test 는 타입 검사와 번들 생성까지 해 주지 않음.
       # build 가 빠져 있으면 tsc 프로젝트 참조가 깨졌거나 번들이 안 만들어지는 변경이
@@ -245,12 +240,7 @@ jobs:
           # 배포 빌드는 이 값이 없으면 일부러 죽게 해 뒀음(axiosInstance.ts).
           # 검사에서는 형태만 맞으면 되므로 진짜 주소일 필요가 없음
           VITE_API_BASE_URL: https://ci.invalid/api
-        run: |
-          if grep -q '"build"' package.json; then
-            pnpm run build
-          else
-            echo "build 스크립트 없음, skip"
-          fi
+        run: pnpm run build --if-present
 
       - name: Setup Java (Maven)
         if: matrix.project.type == 'maven'
@@ -258,6 +248,9 @@ jobs:
         with:
           java-version: 21
           distribution: temurin
+          # ~/.m2/repository 를 캐시함. 없으면 매번 의존성을 전부 내려받아
+          # 검사 시간이 1~2분 더 걸림
+          cache: maven
 
       - name: Spring Boot (Maven) - Verify
         if: matrix.project.type == 'maven'
@@ -275,20 +268,32 @@ jobs:
             mvn verify
           fi
 
-      - name: Setup Java (Gradle)
-        if: matrix.project.type == 'gradle'
-        uses: actions/setup-java@v5
-        with:
-          java-version: 21
-          distribution: temurin
-
-      - name: Spring Boot (Gradle) - Check
-        if: matrix.project.type == 'gradle'
-        working-directory: ${{ matrix.project.dir }}
+  # 브랜치 보호에 걸 잡임
+  #
+  # 위 check 잡의 이름은 matrix 로 만들어져서(예: "Check: frontend (node)") 매번 달라짐.
+  # 그 이름을 필수 검사로 지정하면, 그 프로젝트를 건드리지 않은 PR 에서는 잡이 아예 생기지 않아
+  # "Expected — Waiting for status to be reported" 로 영원히 merge 가 막힘
+  #
+  # 이 잡은 항상 돌고 앞 잡들의 결과만 모아서 판정함
+  # (건너뛴 잡은 통과로 봄. 바뀌지 않은 영역을 검사하지 않는 것이 이 워크플로의 의도임)
+  ci-gate:
+    name: CI Gate
+    if: always()
+    needs: [detect, deploy-config, check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 앞 잡의 결과 확인
         run: |
-          if [ -f "gradlew" ]; then
-            chmod +x ./gradlew
-            ./gradlew check
-          else
-            gradle check
+          echo "detect:        ${{ needs.detect.result }}"
+          echo "deploy-config: ${{ needs.deploy-config.result }}"
+          echo "check:         ${{ needs.check.result }}"
+
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "실패한 잡이 있음"
+            exit 1
           fi
+          if [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "취소된 잡이 있음"
+            exit 1
+          fi
+          echo "통과"

@@ -3,6 +3,7 @@ package com.nanumi.api.service;
 import com.nanumi.api.dto.request.LoginRequest;
 import com.nanumi.api.dto.request.RefreshRequest;
 import com.nanumi.api.dto.request.SignupRequest;
+import com.nanumi.api.dto.request.TermsAgreementRequest;
 import com.nanumi.api.dto.request.WithdrawalRequest;
 import com.nanumi.api.dto.response.LoginResponse;
 import com.nanumi.api.dto.response.LogoutResponse;
@@ -12,11 +13,13 @@ import com.nanumi.api.dto.response.UserResponse;
 import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.entity.Account;
 import com.nanumi.api.entity.RefreshToken;
+import com.nanumi.api.entity.TermsAgreement;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.repository.AccountRepository;
 import com.nanumi.api.repository.RefreshTokenRepository;
+import com.nanumi.api.repository.TermsAgreementRepository;
 import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
@@ -28,9 +31,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,13 +46,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthService {
 
-  private final UserRepository userEntityRepository;
-  private final AccountRepository accountEntityRepository;
+  private final UserRepository userRepository;
+  private final AccountRepository accountRepository;
   private final NanumiPasswordEncoder nanumiPasswordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final LoginAttemptService loginAttemptService;
   private final SignupAttemptService signupAttemptService;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final TermsAgreementRepository termsAgreementRepository;
 
   // 한 계정이 동시에 유지할 수 있는 기기 수임
   // 상한이 없으면 로그인할 때마다 토큰 행이 하나씩 늘어나 끝없이 쌓임
@@ -73,14 +79,19 @@ public class AuthService {
     signupAttemptService.checkBlocked(clientIp);
     signupAttemptService.recordAttempt(clientIp);
 
+    // 필수 약관 동의를 먼저 확인함
+    // 화면의 "다음" 버튼 비활성화는 막는 장치가 아님(개발자 도구로 지울 수 있고 API 직접 호출은 거치지도 않음).
+    // 이메일·닉네임 조회보다 앞에 두어, 동의 없이 보낸 요청으로는 가입 여부를 알아낼 수 없게 함
+    Map<TermsAgreement.Type, TermsAgreementRequest> agreements = resolveAgreements(request);
+
     String email = normalizeEmail(request.email());
 
-    if (accountEntityRepository.existsByEmail(email)) {
+    if (accountRepository.existsByEmail(email)) {
       throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
     }
 
     // abc 와 ABC 가 따로 존재하면 사람이 헷갈리므로 대소문자를 무시하고 봄
-    if (userEntityRepository.existsByNicknameIgnoreCase(request.nickname())) {
+    if (userRepository.existsByNicknameIgnoreCase(request.nickname())) {
       throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
@@ -92,7 +103,7 @@ public class AuthService {
             .dong(blankToNull(request.dong()))
             .ho(blankToNull(request.ho()))
             .build();
-    userEntityRepository.save(user);
+    userRepository.save(user);
 
     Account account =
         Account.builder()
@@ -100,9 +111,54 @@ public class AuthService {
             .email(email)
             .password(nanumiPasswordEncoder.encode(request.password()))
             .build();
-    accountEntityRepository.save(account);
+    accountRepository.save(account);
+
+    saveAgreements(user, agreements);
 
     return SignupResponse.of(UserResponse.from(user));
+  }
+
+  // 보낸 동의 목록을 서버가 아는 약관으로 바꾸고, 필수 항목이 모두 동의됐는지 확인함
+  //
+  // 모르는 key 는 조용히 버림. 프런트가 약관을 추가하고 서버가 아직 모르는 상황에서
+  // 가입 전체가 막히면 배포 순서에 따라 서비스가 멈추기 때문임.
+  // 반대로 필수 약관이 빠지는 것은 막아야 하므로 그쪽만 예외를 던짐
+  private Map<TermsAgreement.Type, TermsAgreementRequest> resolveAgreements(SignupRequest request) {
+    Map<TermsAgreement.Type, TermsAgreementRequest> resolved =
+        new EnumMap<>(TermsAgreement.Type.class);
+
+    for (TermsAgreementRequest agreement : request.agreements()) {
+      TermsAgreement.Type.fromKey(agreement.key())
+          // 같은 약관을 두 번 보내면 뒤의 것으로 덮지 않고 앞의 것을 남김
+          .ifPresent(type -> resolved.putIfAbsent(type, agreement));
+    }
+
+    boolean allRequiredAgreed =
+        TermsAgreement.Type.required().stream()
+            .allMatch(type -> resolved.containsKey(type) && resolved.get(type).isAgreed());
+
+    if (!allRequiredAgreed) {
+      throw new CustomException(ErrorCode.TERMS_NOT_AGREED);
+    }
+
+    return resolved;
+  }
+
+  // 받은 동의를 한 줄씩 남김. 선택 약관을 거부한 것도 남김
+  private void saveAgreements(
+      User user, Map<TermsAgreement.Type, TermsAgreementRequest> agreements) {
+    LocalDateTime agreedAt = LocalDateTime.now();
+
+    agreements.forEach(
+        (type, agreement) ->
+            termsAgreementRepository.save(
+                TermsAgreement.builder()
+                    .user(user)
+                    .termsKey(type.getKey())
+                    .termsVersion(agreement.version())
+                    .agreed(agreement.isAgreed())
+                    .agreedAt(agreedAt)
+                    .build()));
   }
 
   public LoginResponse login(LoginRequest request, String clientIp) {
@@ -111,7 +167,7 @@ public class AuthService {
     // 막혀 있으면 비밀번호를 맞춰 보기 전에 끊음
     loginAttemptService.checkBlocked(email, clientIp);
 
-    Account account = accountEntityRepository.findByEmail(email).orElse(null);
+    Account account = accountRepository.findByEmail(email).orElse(null);
 
     if (account == null) {
       // 여기서 바로 돌려주면 응답이 눈에 띄게 빨라져서 가입 여부가 드러남
@@ -159,7 +215,7 @@ public class AuthService {
             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
 
     Account account =
-        accountEntityRepository
+        accountRepository
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -205,7 +261,7 @@ public class AuthService {
   // 보내지 않으면 이 계정의 모든 기기를 로그아웃함(토큰을 잃어버렸을 때를 위한 길)
   public LogoutResponse logout(Integer userId, String refreshToken) {
     Account account =
-        accountEntityRepository
+        accountRepository
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -225,7 +281,7 @@ public class AuthService {
 
   public WithdrawalResponse withdraw(Integer userId, WithdrawalRequest request) {
     Account account =
-        accountEntityRepository
+        accountRepository
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 

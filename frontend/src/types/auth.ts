@@ -1,3 +1,14 @@
+// 약관 동의 한 건임. 서버가 이걸 terms_agreements 에 한 줄로 남김
+//
+// agreed 가 false 인 것도 보내야 함. 선택 약관을 "물어봤고 거부했다" 는 사실 자체가
+// 마케팅 발송 여부를 증명하는 기록이 됨
+export interface TermsAgreementRequest {
+  key: string;
+  // 동의한 약관의 판. constants/terms.ts 의 effectiveDate 를 그대로 보냄
+  version: string;
+  agreed: boolean;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;
@@ -5,6 +16,8 @@ export interface SignupRequest {
   aptName: string;
   dong?: string;
   ho?: string;
+  // 서버가 필수 약관 동의를 다시 확인함. 비어 있으면 400 이 남
+  agreements: TermsAgreementRequest[];
 }
 
 export interface LoginRequest {
@@ -48,7 +61,12 @@ export interface WithdrawalResponse {
 
 export interface ErrorResponse {
   status: number;
+  // 백엔드 ErrorCode 의 이름임(예: DUPLICATE_EMAIL, TERMS_NOT_AGREED)
+  // 문구는 바뀔 수 있지만 코드는 그대로이므로, 화면에서 분기할 때는 message 대신 이걸 봐야 함
+  code: string;
   message: string;
+  path?: string;
+  timestamp?: string;
 }
 
 export interface RefreshRequest {

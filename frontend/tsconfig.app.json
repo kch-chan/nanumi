@@ -7,6 +7,10 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
 
+    /* strict 는 TypeScript 를 쓰는 이유의 절반임. 특히 strictNullChecks 가 없으면
+       null 일 수 있는 값을 그냥 쓰는 코드가 컴파일을 통과하고 런타임에 터짐 */
+    "strict": true,
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

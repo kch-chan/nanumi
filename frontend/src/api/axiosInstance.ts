@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { readStoredRefreshToken, useAuthStore } from '../stores/authStore';
-import type { TokenResponse } from '../types/auth';
+import type { RefreshRequest, TokenResponse } from '../types/auth';
 
 const LOGIN_PATH = '/login';
 
@@ -81,9 +81,13 @@ async function requestNewAccessToken(): Promise<string> {
     // SPA rewrite 를 타서 index.html 이 200 으로 오거나 405/404 가 남.
     // 그러면 accessToken 이 undefined 가 되어 재발급이 100% 실패하고,
     // 액세스 토큰은 localStorage 에 남기지 않으므로 새로고침마다 로그아웃됨
-    const { data } = await axios.post<TokenResponse>(`${baseURL}/auth/refresh`, {
-      refreshToken,
-    });
+    // 본문에 타입을 붙여 둠. types/auth.ts 의 RefreshRequest 가 선언만 되어 있고
+    // 아무 데서도 쓰이지 않아서, 서버와 칸 이름이 어긋나도 알 수 없는 상태였음
+    const body: RefreshRequest = { refreshToken };
+    const { data } = await axios.post<TokenResponse>(
+      `${baseURL}/auth/refresh`,
+      body,
+    );
 
     // 서버가 리프레시 토큰도 새로 주므로(회전) 둘 다 갈아 끼움
     useAuthStore.getState().setTokens(data);

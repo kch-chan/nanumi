@@ -1,5 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { useAuthStore } from '../authStore';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  AUTH_STORAGE_KEY,
+  readStoredRefreshToken,
+  useAuthStore,
+} from '../authStore';
 import type { UserResponse } from '../../types/auth';
 
 const user: UserResponse = {
@@ -11,10 +15,10 @@ const user: UserResponse = {
   role: 'USER',
 };
 
-const STORAGE_KEY = 'nanumi-auth';
-
+// 키를 적어 두지 않고 저장소에서 가져옴
+// 적어 두면 authStore 쪽에서 키를 바꿀 때 테스트가 조용히 엉뚱한 키를 보게 됨
 const storedState = () => {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = localStorage.getItem(AUTH_STORAGE_KEY);
   return raw ? JSON.parse(raw).state : null;
 };
 
@@ -93,5 +97,64 @@ describe('authStore', () => {
     expect(stored.refreshToken).toBeNull();
     expect(stored.user).toBeNull();
     expect(stored.isLoggedIn).toBe(false);
+  });
+});
+
+// 토큰 재발급 직전에 부르는 함수임. 여기가 틀리면 서버가 재사용 공격으로 보고
+// 그 계정의 모든 기기를 로그아웃시킴. 그래서 따로 묶어서 확인함
+describe('readStoredRefreshToken', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.getState().clearAuth();
+    vi.restoreAllMocks();
+  });
+
+  it('저장된 값이 없으면 null 을 준다', () => {
+    localStorage.clear();
+
+    expect(readStoredRefreshToken()).toBeNull();
+  });
+
+  it('저장소의 리프레시 토큰을 읽는다', () => {
+    useAuthStore.getState().setAuth({ accessToken: 'a', refreshToken: 'r1', user });
+
+    expect(readStoredRefreshToken()).toBe('r1');
+  });
+
+  // 다른 탭이 회전시킨 결과는 저장소에만 반영됨. 탭마다 zustand 상태가 따로이기 때문임
+  // 메모리를 보면 옛 값을 쓰게 되어 서버가 "없는 토큰" 으로 판단함
+  it('메모리가 아니라 저장소의 값을 본다', () => {
+    useAuthStore
+      .getState()
+      .setAuth({ accessToken: 'a', refreshToken: '옛-토큰', user });
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ state: { refreshToken: '새-토큰' }, version: 0 }),
+    );
+
+    expect(useAuthStore.getState().refreshToken).toBe('옛-토큰');
+    expect(readStoredRefreshToken()).toBe('새-토큰');
+  });
+
+  it('JSON 이 깨져 있어도 예외를 던지지 않는다', () => {
+    localStorage.setItem(AUTH_STORAGE_KEY, '{깨진 JSON');
+
+    expect(readStoredRefreshToken()).toBeNull();
+  });
+
+  it('state 가 없는 구조여도 null 을 준다', () => {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ version: 0 }));
+
+    expect(readStoredRefreshToken()).toBeNull();
+  });
+
+  // 시크릿 모드나 저장소 차단 환경에서는 읽기 자체가 예외를 던짐
+  // try/catch 가 없으면 여기서 앱이 죽음
+  it('저장소 접근이 막혀 있어도 null 을 준다', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('접근 거부', 'SecurityError');
+    });
+
+    expect(readStoredRefreshToken()).toBeNull();
   });
 });

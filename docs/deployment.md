@@ -122,7 +122,9 @@ Render 는 이 파일들을 `/etc/secrets/파일명` 에 둡니다. `render.yaml
 
 > 환경 변수 `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY` 에 PEM 본문을 직접 넣어도 동작합니다. 본문이 있으면 경로보다 본문이 우선하므로 둘이 충돌하지 않습니다.
 
-`SPRING_PROFILES_ACTIVE=prod` 와 `FORWARD_HEADERS_STRATEGY=framework` 는 `render.yaml` 에 이미 있습니다.
+`SPRING_PROFILES_ACTIVE=prod` 와 `TRUSTED_PROXY_COUNT=1` 은 `render.yaml` 에 이미 있습니다.
+
+> **`FORWARD_HEADERS_STRATEGY` 는 쓰지 않습니다.** 예전에 이 문서가 `FORWARD_HEADERS_STRATEGY=framework` 를 넣으라고 안내했는데, 그 설정은 `X-Forwarded-For` 목록의 **맨 앞**을 접속자로 보고, 맨 앞은 요청하는 쪽이 지어낼 수 있는 자리입니다. 헤더만 바꿔 가며 보내면 로그인·가입 시도 제한을 그대로 통과합니다. 지금은 `ClientIpResolver` 가 목록을 **뒤에서부터** 읽고, 몇 칸을 건너뛸지를 `TRUSTED_PROXY_COUNT` 로 정합니다. 아래 6·8번과 점검표에도 같은 내용이 있습니다. 대시보드에 그 변수가 남아 있으면 지우십시오.
 
 ### 모노레포라서 경로 세 칸을 맞춰야 합니다
 
@@ -357,6 +359,9 @@ Render 는 이전 배포로 되돌릴 수 있습니다 (Deploys → 성공한 �
 - [ ] Render 대시보드에 `TRUSTED_PROXY_COUNT=1` 이 있고 `FORWARD_HEADERS_STRATEGY` 가 없는지 확인
 - [ ] Vercel 의 Preview 와 Production 환경 변수가 따로 설정되어 있는지 확인
 - [ ] 로컬 `.env.prod` 와 `keys/*.pem` 이 시험용인지 실제 운영값인지 확인
+- [ ] **비밀번호 재설정 기능.** 아직 없습니다. 비밀번호를 잊으면 복구할 길이 없어 새 이메일로 다시 가입해야 합니다. 이메일 발송 수단(SMTP 또는 Resend·SendGrid 등)을 먼저 정해야 하므로 코드만으로 끝나지 않습니다
+- [ ] **Preview 가 운영 DB 를 씁니다.** Vercel 프리뷰 배포가 Render 운영 백엔드를 그대로 부르므로, 프리뷰에서 가입·탈퇴를 시험하면 운영 데이터가 바뀝니다. 회원을 받기 전에 스테이징 백엔드와 Neon 브랜치를 따로 두어야 합니다
+- [ ] **백업의 보유 기간.** 약관에 "탈퇴 후 30일" 이라고 적어 두었으므로 백업에도 같은 기한이 적용되어야 합니다. 1년치 덤프를 들고 있으면 적어 둔 것과 어긋납니다
 
 ---
 

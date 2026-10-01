@@ -66,7 +66,12 @@ Authorization: Bearer <accessToken>
   "nickname": "나눔이",
   "aptName": "행복아파트",
   "dong": "101",
-  "ho": "1502"
+  "ho": "1502",
+  "agreements": [
+    { "key": "service",   "version": "시행일자 2026년 8월", "agreed": true  },
+    { "key": "privacy",   "version": "시행일자 2026년 8월", "agreed": true  },
+    { "key": "marketing", "version": "시행일자 2026년 8월", "agreed": false }
+  ]
 }
 ```
 
@@ -78,8 +83,25 @@ Authorization: Bearer <accessToken>
 | `aptName` | ✅ | 100자 이하 |
 | `dong` | | 20자 이하 |
 | `ho` | | 20자 이하 |
+| `agreements` | ✅ | 1~20개. 비어 있으면 400 |
 
 회원이 직접 적는 값(`nickname`, `aptName`, `dong`, `ho`)은 스크립트가 될 만한 입력을 걸러 냅니다.
+
+### `agreements` — 약관 동의 기록
+
+| 항목 | 필수 | 제약 |
+| --- | --- | --- |
+| `key` | ✅ | 20자 이하. `service` / `privacy` / `marketing` |
+| `version` | ✅ | 40자 이하. 동의한 약관의 시행일자 |
+| `agreed` | | `true` / `false`. 빼면 동의하지 않은 것으로 봄 |
+
+**필수 약관(`service`, `privacy`)이 `agreed: true` 로 와야 가입됩니다.** 하나라도 빠지거나 `false` 면 400(`TERMS_NOT_AGREED`)입니다. 화면의 "다음" 버튼 비활성화는 개발자 도구로 지울 수 있고 API 를 직접 부르면 거치지도 않으므로, 서버가 다시 확인합니다.
+
+**선택 약관을 거부한 것(`agreed: false`)도 보내야 합니다.** "물어봤고 거부했다" 는 사실 자체가 마케팅 발송 여부를 증명하는 기록입니다.
+
+서버가 모르는 `key` 는 버리고 나머지를 처리합니다. 프런트가 약관을 추가하고 서버가 아직 모르는 동안 가입 전체가 막히지 않게 하기 위함입니다.
+
+동의는 `terms_agreements` 에 약관마다 한 줄씩 남고, 개인정보 파기 기한(탈퇴 후 30일)에 함께 지워집니다.
 
 **201 Created**
 
@@ -95,8 +117,11 @@ Authorization: Bearer <accessToken>
 | 오류 | 이유 |
 | --- | --- |
 | 400 | 형식 위반 |
+| 400 `TERMS_NOT_AGREED` | 필수 약관 동의가 빠졌거나 거부로 옴 |
 | 409 | 이메일 또는 닉네임 중복 |
 | 429 | 한 IP 에서 1시간에 5번을 넘김 |
+
+> 약관 동의 확인은 이메일·닉네임 중복 조회보다 **먼저** 돕니다. 동의 없이 보낸 요청으로는 가입된 이메일인지 알아낼 수 없게 하기 위함입니다.
 
 > 429 는 성공·실패를 가리지 않고 **시도 자체를** 셉니다. 중복 이메일 응답(409)만 보고 가입 여부를 훑는 것을 막기 위함입니다.
 

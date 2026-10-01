@@ -439,3 +439,23 @@ export const TERMS_DOCUMENTS: readonly TermsDocument[] = [
 
 export const findTermsDocument = (key: TermsKey | null) =>
   TERMS_DOCUMENTS.find((document) => document.key === key) ?? null;
+
+// 필수 약관의 key 목록임
+// 서버도 같은 목록을 들고 있음(TermsAgreement.Type). 둘 중 하나만 고치면 어긋남
+export const REQUIRED_TERMS_KEYS: readonly TermsKey[] = TERMS_DOCUMENTS.filter(
+  (document) => document.required,
+).map((document) => document.key);
+
+// 가입 요청에 담아 보낼 동의 목록을 만듦
+//
+// 선택 약관을 거부한 것도 담음. "물어봤고 거부했다" 는 사실 자체가 기록 대상임
+// version 에는 effectiveDate 를 그대로 넣음. 약관을 개정하면 이 값이 바뀌므로
+// 어느 판에 동의한 회원인지 서버에서 구분할 수 있음
+export const toAgreementPayload = (
+  checked: Partial<Record<TermsKey, boolean>>,
+): { key: TermsKey; version: string; agreed: boolean }[] =>
+  TERMS_DOCUMENTS.map((document) => ({
+    key: document.key,
+    version: document.effectiveDate,
+    agreed: Boolean(checked[document.key]),
+  }));

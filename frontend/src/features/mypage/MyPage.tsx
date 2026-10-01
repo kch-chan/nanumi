@@ -70,6 +70,7 @@ function MyPage() {
         <PasswordInput
           label="비밀번호 확인"
           placeholder="현재 비밀번호를 입력하세요"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -81,7 +82,7 @@ function MyPage() {
         />
 
         {withdrawal.isError && (
-          <p className="text-sm text-red-500">
+          <p role="alert" className="text-sm text-red-500">
             {getErrorMessage(withdrawal.error)}
           </p>
         )}

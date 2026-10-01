@@ -5,17 +5,21 @@ import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import Modal from '../../../components/Modal';
 import PasswordInput from '../../../components/PasswordInput';
+import type { TermsKey } from '../../../constants/terms';
+import { toAgreementPayload } from '../../../constants/terms';
 import { useSignup } from '../../../hooks/useSignup';
 import { signupSchema } from '../../../schemas/authSchema';
 import type { SignupFormValues } from '../../../schemas/authSchema';
 import { getErrorMessage } from '../../../utils/errorMessage';
 
 interface StepInfoProps {
+  // 앞 단계에서 받은 약관 동의 상태임. 가입 요청에 함께 담아 보냄
+  checkedTerms: Partial<Record<TermsKey, boolean>>;
   onPrev: () => void;
   onComplete: (nickname: string) => void;
 }
 
-function StepInfo({ onPrev, onComplete }: StepInfoProps) {
+function StepInfo({ checkedTerms, onPrev, onComplete }: StepInfoProps) {
   const signup = useSignup();
   const [isAddressOpen, setIsAddressOpen] = useState(false);
 
@@ -46,6 +50,9 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
         // 비워 두면 빈 문자열이라 아예 안 보냄 (서버도 빈 값은 null 로 바꾸지만 여기서도 걸러 둠)
         dong: values.dong || undefined,
         ho: values.ho || undefined,
+        // 동의 기록을 함께 보냄. 선택 약관의 거부도 담김
+        // 전에는 체크만 받고 아무것도 보내지 않아서 동의 사실이 어디에도 남지 않았음
+        agreements: toAgreementPayload(checkedTerms),
       },
       { onSuccess: () => onComplete(values.nickname) },
     );
@@ -69,6 +76,7 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
           label="이메일"
           type="email"
           placeholder="example@apt.com"
+          autoComplete="email"
           error={errors.email?.message}
           {...register('email')}
         />
@@ -76,6 +84,7 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
         <PasswordInput
           label="비밀번호"
           placeholder="8~20자, 영문·숫자·특수문자 포함"
+          autoComplete="new-password"
           error={errors.password?.message}
           {...register('password')}
         />
@@ -83,6 +92,7 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
         <PasswordInput
           label="비밀번호 확인"
           placeholder="비밀번호를 다시 입력하세요"
+          autoComplete="new-password"
           error={errors.passwordConfirm?.message}
           {...register('passwordConfirm')}
         />
@@ -90,6 +100,7 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
         <Input
           label="닉네임"
           placeholder="한글/영문/숫자 2~10자"
+          autoComplete="nickname"
           error={errors.nickname?.message}
           {...register('nickname')}
         />
@@ -134,8 +145,10 @@ function StepInfo({ onPrev, onComplete }: StepInfoProps) {
           </div>
         </div>
 
+        {/* role="alert" 가 있으면 문구가 나타나는 순간 스크린 리더가 읽어 줌
+            없으면 이용자가 그 자리로 옮겨 가야 알 수 있음 */}
         {signup.isError && (
-          <p className="text-sm text-red-500">
+          <p role="alert" className="text-sm text-red-500">
             {getErrorMessage(signup.error)}
           </p>
         )}

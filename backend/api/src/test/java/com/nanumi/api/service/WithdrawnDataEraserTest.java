@@ -13,6 +13,7 @@ import com.nanumi.api.entity.User;
 import com.nanumi.api.repository.AccountRepository;
 import com.nanumi.api.repository.DataErasureLogRepository;
 import com.nanumi.api.repository.RefreshTokenRepository;
+import com.nanumi.api.repository.TermsAgreementRepository;
 import com.nanumi.api.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -38,6 +39,7 @@ class WithdrawnDataEraserTest {
   @Mock private UserRepository userRepository;
   @Mock private AccountRepository accountRepository;
   @Mock private RefreshTokenRepository refreshTokenRepository;
+  @Mock private TermsAgreementRepository termsAgreementRepository;
   @Mock private DataErasureLogRepository dataErasureLogRepository;
 
   private WithdrawnDataEraser eraser;
@@ -46,7 +48,11 @@ class WithdrawnDataEraserTest {
   void setUp() {
     eraser =
         new WithdrawnDataEraser(
-            userRepository, accountRepository, refreshTokenRepository, dataErasureLogRepository);
+            userRepository,
+            accountRepository,
+            refreshTokenRepository,
+            termsAgreementRepository,
+            dataErasureLogRepository);
   }
 
   private User withdrawnUser(int id) {
@@ -83,6 +89,29 @@ class WithdrawnDataEraserTest {
     verify(refreshTokenRepository).deleteByAccount_Id(7);
     verify(accountRepository).delete(account);
     verify(userRepository).delete(user);
+  }
+
+  // 약관 동의 기록도 개인정보에 딸린 자료이므로 같은 기한에 함께 지워야 함
+  // 약관에 "탈퇴 후 30일" 이라고 적어 두었는데 이 표만 남으면 적어 둔 것과 달라짐
+  @Test
+  @DisplayName("약관 동의 기록도 함께 지움")
+  void 약관_동의_기록도_지움() {
+    User user = withdrawnUser(1);
+    given(user, accountOf(user, 7));
+
+    eraser.erase(1, NOW);
+
+    verify(termsAgreementRepository).deleteByUser_Id(1);
+  }
+
+  @Test
+  @DisplayName("회원 행이 없으면 약관 동의 기록도 건드리지 않음")
+  void 회원이_없으면_동의_기록도_그대로() {
+    when(userRepository.findById(99)).thenReturn(Optional.empty());
+
+    eraser.erase(99, NOW);
+
+    verify(termsAgreementRepository, never()).deleteByUser_Id(anyInt());
   }
 
   // 지웠다는 사실은 남겨야 함. 다만 기록 자체가 개인정보가 되면 안 되므로 번호와 시각만 담음

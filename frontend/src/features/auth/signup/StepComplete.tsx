@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Button from '../../../components/Button';
+import { buttonClassName } from '../../../components/buttonStyles';
 
 interface StepCompleteProps {
   nickname: string;
@@ -34,8 +34,9 @@ function StepComplete({ nickname }: StepCompleteProps) {
         </p>
       </div>
 
-      <Link to="/login" className="w-full">
-        <Button fullWidth>로그인하러 가기</Button>
+      {/* <Link><Button> 중첩(a 안의 button)을 피하려고 링크를 버튼 모양으로 꾸밈 */}
+      <Link to="/login" className={buttonClassName({ fullWidth: true })}>
+        로그인하러 가기
       </Link>
     </div>
   );

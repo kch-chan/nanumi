@@ -1,7 +1,6 @@
 package com.nanumi.api.repository;
 
 import com.nanumi.api.entity.RefreshToken;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,8 +14,10 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
   void deleteByAccount_Id(Integer accountId);
 
   // 기기 수를 제한하고 만료된 행을 치울 때 씀. 오래된 것부터 옴
+  //
+  // 만료된 행 정리는 이 목록을 받아 AuthService.pruneRefreshTokens 가 함.
+  // 예전에 있던 deleteByExpiresAtBefore 는 부르는 곳이 없어 지웠음.
+  // 쿼리 메서드는 선언만으로 스프링이 구현을 만들어 주므로, 안 쓰는 것이 남아 있으면
+  // "어딘가에서 정리가 돌고 있다" 고 잘못 읽히게 됨
   List<RefreshToken> findByAccount_IdOrderByCreatedAtAsc(Integer accountId);
-
-  // 기한이 지난 행을 정리함
-  void deleteByExpiresAtBefore(LocalDateTime cutoff);
 }

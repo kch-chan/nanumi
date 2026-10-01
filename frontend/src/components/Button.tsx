@@ -1,7 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-type ButtonSize = 'sm' | 'md' | 'lg';
+import type { ButtonSize, ButtonVariant } from './buttonStyles';
+import { buttonClassName } from './buttonStyles';
 
 interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: ButtonVariant;
@@ -12,27 +11,11 @@ interface ButtonProps extends ComponentPropsWithRef<'button'> {
   rightIcon?: ReactNode;
 }
 
-const VARIANT_STYLES: Record<ButtonVariant, string> = {
-  primary:
-    'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-emerald-300',
-  secondary:
-    'bg-stone-100 text-stone-800 hover:bg-stone-200 active:bg-stone-300 disabled:bg-stone-50 disabled:text-stone-400',
-  outline:
-    'border border-stone-300 text-stone-700 bg-transparent hover:bg-stone-50 active:bg-stone-100 disabled:text-stone-300 disabled:border-stone-200',
-  ghost:
-    'bg-transparent text-stone-600 hover:bg-stone-100 active:bg-stone-200 disabled:text-stone-300',
-  danger:
-    'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 disabled:bg-red-300',
-};
-
-const SIZE_STYLES: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3 text-sm gap-1.5',
-  md: 'h-11 px-4 text-sm gap-2',
-  lg: 'h-12 px-6 text-base gap-2',
-};
-
 function Button({
   ref,
+  // <button> 의 기본 type 은 submit 임. 그래서 폼 안에 둔 "취소", "주소 검색" 같은 버튼이
+  // 누르는 순간 폼을 제출해 버림. 제출 버튼에만 type="submit" 을 적도록 기본값을 뒤집어 둠
+  type = 'button',
   variant = 'primary',
   size = 'md',
   isLoading = false,
@@ -47,17 +30,9 @@ function Button({
   return (
     <button
       ref={ref}
+      type={type}
       disabled={disabled || isLoading}
-      className={`
-        inline-flex items-center justify-center rounded-lg font-medium
-        transition-colors duration-150
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2
-        disabled:cursor-not-allowed
-        ${VARIANT_STYLES[variant]}
-        ${SIZE_STYLES[size]}
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `.trim()}
+      className={buttonClassName({ variant, size, fullWidth, className })}
       {...props}
     >
       {isLoading ? (

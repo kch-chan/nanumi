@@ -19,6 +19,7 @@
 | `V1__initial_schema.sql` | `users`, `accounts` |
 | `V2__refresh_tokens_table.sql` | `refresh_tokens` 추가, `accounts` 의 토큰 칼럼 제거 |
 | `V3__data_erasure_logs.sql` | `data_erasure_logs` 추가 |
+| `V4__terms_agreements.sql` | `terms_agreements` 추가 |
 
 **이미 적용된 파일은 고치지 않습니다.** Flyway 가 체크섬을 기록해 두므로 내용이 바뀌면 기동이 막힙니다. 잘못된 것은 다음 번호로 보정합니다.
 
@@ -108,7 +109,32 @@ FK 를 걸지 않는 이유는 가리킬 행이 이미 사라졌기 때문입니
 
 **이 표에 개인을 알아볼 수 있는 값은 담지 않습니다.** 번호와 시각만 남기고, 그 번호로 되짚을 수 있는 행이 없으므로 표만 봐서는 누구였는지 알 수 없습니다.
 
-`WithdrawnDataPurgeService` 가 채웁니다. 지우는 순서는 외래키를 거스르지 않게 `refresh_tokens` → `accounts` → `users` 입니다.
+`WithdrawnDataPurgeService` 가 채웁니다. 지우는 순서는 외래키를 거스르지 않게 `refresh_tokens` → `accounts` → `terms_agreements` → `users` 입니다.
+
+---
+
+## terms_agreements — 약관 동의 기록
+
+| 칼럼 | 타입 | 제약 | 비고 |
+| --- | --- | --- | --- |
+| `id` | `INTEGER` | PK, identity | |
+| `user_id` | `INTEGER` | NOT NULL, FK → `users(id)` ON DELETE CASCADE | |
+| `terms_key` | `VARCHAR(20)` | NOT NULL | `service` / `privacy` / `marketing` |
+| `terms_version` | `VARCHAR(40)` | NOT NULL | 동의한 약관의 시행일자 |
+| `agreed` | `BOOLEAN` | NOT NULL | 선택 약관의 **거부도 기록** |
+| `agreed_at` | `TIMESTAMP(6)` | NOT NULL | |
+| `created_at` `updated_at` | `TIMESTAMP(6)` | NOT NULL | |
+
+- UNIQUE `(user_id, terms_key)` — 한 회원이 같은 약관에 두 줄을 남기지 못하게 함
+- INDEX `(user_id)` — 회원 단위로 찾고 지움
+
+**왜 필요한가.** 화면에는 동의 체크박스가 있었지만 동의했다는 사실이 어디에도 남지 않았습니다. 개인정보 보호법 제22조는 동의를 각각 알리고 받으라고 하고, **동의를 받았다는 사실의 입증 책임은 사업자에게 있습니다.** 기록이 없으면 분쟁에서 증명할 방법이 없습니다.
+
+**판(`terms_version`)을 함께 남기는 이유.** 약관을 개정하면 그 뒤에 가입한 사람과 이전에 가입한 사람이 서로 다른 내용에 동의한 것이 됩니다. 어느 판에 동의했는지가 기록의 핵심입니다. 재동의를 따로 쌓아야 하면 UNIQUE 를 `(user_id, terms_key, terms_version)` 으로 넓혀야 합니다.
+
+**선택 약관의 거부도 남기는 이유.** `agreed = false` 가 "물어봤고 거부했다" 는 기록입니다. 마케팅을 보내지 않았음을 증명하는 근거가 됩니다.
+
+**파기.** `users` 에 `ON DELETE CASCADE` 로 걸려 있고, `WithdrawnDataEraser` 가 명시적으로도 지웁니다. 약관에 적은 "탈퇴 후 30일" 이 이 표에도 똑같이 적용되어야 하므로 함께 사라집니다. 파기했다는 사실은 `data_erasure_logs` 가 남깁니다.
 
 ---
 
@@ -117,6 +143,7 @@ FK 를 걸지 않는 이유는 가리킬 행이 이미 사라졌기 때문입니
 ```
 users 1 ──── 1 accounts 1 ──── N refresh_tokens
   │                                 (기기마다 한 행)
+  ├─ 1 ──── N terms_agreements      (약관마다 한 행)
   └─ 탈퇴 후 30일 → 행이 지워지고 data_erasure_logs 에 기록만 남음
 ```
 

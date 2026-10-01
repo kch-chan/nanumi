@@ -69,6 +69,84 @@ describe('signupSchema', () => {
       '닉네임은 한글/영문/숫자 2~10자여야 합니다.',
     );
   });
+
+  it('딱 8자 비밀번호는 통과한다', () => {
+    const password = 'Ab3!efgh';
+
+    expect(password).toHaveLength(8);
+    expect(errorsOf({ ...validSignup, password, passwordConfirm: password })).toEqual({});
+  });
+});
+
+// SafeTextValidator 가 막는 것들임
+// 프런트가 통과시키면 가입 버튼을 눌러야 서버가 막는 꼴이 되고,
+// 프런트가 더 막으면 서버는 허용하는 값을 화면에서 못 쓰게 됨
+describe('safeText 검사', () => {
+  it.each([
+    ['<script>', 'HTML 태그는 사용할 수 없습니다.'],
+    ['행복>아파트', 'HTML 태그는 사용할 수 없습니다.'],
+    ['&lt;아파트', 'HTML 문자 참조는 사용할 수 없습니다.'],
+    ['&#60;아파트', 'HTML 문자 참조는 사용할 수 없습니다.'],
+    ['&#x3c;아파트', 'HTML 문자 참조는 사용할 수 없습니다.'],
+    ['javascript:alert(1)', '스크립트 주소는 사용할 수 없습니다.'],
+    ['data:text/html,x', '스크립트 주소는 사용할 수 없습니다.'],
+    ['vbscript:x', '스크립트 주소는 사용할 수 없습니다.'],
+  ])('아파트명이 %s 이면 거부한다', (aptName, message) => {
+    expect(errorsOf({ ...validSignup, aptName }).aptName).toBe(message);
+  });
+
+  // 공백을 걷어 내고 봐야 잡힘. "java script:" 로 적어서 우회하는 것을 막음
+  it('공백을 끼워 넣은 스크립트 주소도 거부한다', () => {
+    expect(errorsOf({ ...validSignup, aptName: 'Java Script:alert(1)' }).aptName).toBe(
+      '스크립트 주소는 사용할 수 없습니다.',
+    );
+  });
+
+  // 제로 폭 공백(U+200B). 화면에는 "행복아파트" 로 보이지만 값이 다름
+  // 코드 포인트로 적어 둠. 문자를 직접 붙여 넣으면 편집기가 지울 수 있음
+  it('보이지 않는 문자를 거부한다', () => {
+    expect(errorsOf({ ...validSignup, aptName: '행복​아파트' }).aptName).toBe(
+      '보이지 않는 문자는 사용할 수 없습니다.',
+    );
+  });
+
+  // 방향 재정의(U+202E). 글자가 거꾸로 보이게 만들어 사람을 속일 수 있음
+  it('방향 뒤집기 문자를 거부한다', () => {
+    expect(errorsOf({ ...validSignup, nickname: '나눔‮이' }).nickname).toBeTruthy();
+  });
+});
+
+// 백엔드 EmailValidator 와 같은 순서여야 함
+//
+// 순서가 다르면 프런트에서 지적한 것을 고쳐도 서버가 다른 것을 지적해서 두 번 고치게 됨
+// 예: 'a@b.c' 는 형식(TLD 1자)도 틀렸지만 길이(5자)에서 먼저 걸려야 함
+describe('이메일 검증 순서', () => {
+  it.each([
+    ['', '이메일을 입력해 주세요.'],
+    ['a b@example.com', '이메일에는 공백을 포함할 수 없습니다.'],
+    ['a@@example.com', '이메일에는 @를 하나만 포함해야 합니다.'],
+    ['a@b.c', '이메일은 7자 이상이어야 합니다.'],
+    [`${'a'.repeat(95)}@b.com`, '이메일은 100자 이하여야 합니다.'],
+    ['나눔이@example.com', '이메일에는 영문, 숫자와 일부 기호만 사용할 수 있습니다.'],
+    ['nanumi@example', '올바른 이메일 형식이 아닙니다.'],
+  ])('%s 이면 "%s" 를 알려 준다', (email, message) => {
+    expect(errorsOf({ ...validSignup, email }).email).toBe(message);
+  });
+});
+
+// 백엔드 PasswordValidator 와 같은 순서·같은 문구여야 함
+describe('비밀번호 검증 순서', () => {
+  it.each([
+    ['', '비밀번호를 입력해 주세요.'],
+    ['Ab3! efgh', '비밀번호에는 공백을 포함할 수 없습니다.'],
+    ['Ab3!비밀번호', '비밀번호에는 영문, 숫자, 특수문자만 사용할 수 있습니다.'],
+    ['Ab3!efg', '비밀번호는 8~20자여야 합니다.'],
+    ['abcdefgh!', '비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.'],
+  ])('%s 이면 "%s" 를 알려 준다', (password, message) => {
+    expect(errorsOf({ ...validSignup, password, passwordConfirm: password }).password).toBe(
+      message,
+    );
+  });
 });
 
 describe('loginSchema', () => {

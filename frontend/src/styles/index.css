@@ -1,1 +1,37 @@
 @import 'tailwindcss';
+
+/* Modal.tsx 가 animate-[modal-in_150ms_ease-out] 로 이 이름을 부르는데
+   @keyframes 가 어디에도 없었음. 브라우저는 없는 애니메이션 이름을 조용히 무시하므로
+   오류 없이 "아무 일도 일어나지 않는" 상태였음 */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 모달이 뜰 때 배경도 같이 서서히 깔리게 함 */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 움직임을 줄이도록 설정한 이용자에게는 애니메이션을 끔
+   어지럼증·멀미를 느끼는 사람이 OS 에서 켜 두는 설정임 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

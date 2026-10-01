@@ -6,7 +6,9 @@
 - vite (8.x): webpack보다 빠른 속도
 - Node.js (24버전): 안정된 버전 사용
 - Typescript (~6.0.x): 런타임 오류 사전 방지하고 코드 안정성 높임
-- SCSS (1.101.x): 변수 등 활용해서 CSS 작성 가능
+- Tailwind CSS (4.x): 유틸리티 클래스 기반. 스타일을 컴포넌트에 함께 둬서 파일을 오가지 않음
+  - 처음에는 SCSS 를 적어 두었는데 실제로는 쓰지 않습니다(`5785064 chore: tailwind 설치`). 버튼처럼 variant × size 조합이 많은 것을 `Record<ButtonVariant, string>` 으로 두면 variant 를 추가할 때 스타일을 빠뜨리면 컴파일이 막힙니다. SCSS 클래스는 안 만들어도 그냥 통과합니다
+  - `@tailwindcss/vite` 플러그인으로 넣었고 설정 파일(`tailwind.config.js`)은 없습니다. v4 부터 CSS 에서 `@import 'tailwindcss'` 한 줄로 끝납니다
 - Zustand (5.0.x): 전역 상태 관리 (로그인, ui 상태 등)
 - TanStack Query (5.101.x):  서버 데이터 관리 (서버, 캐싱, api 응답 데이터)
 - axios (1.18.x): API 호출

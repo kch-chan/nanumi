@@ -8,6 +8,11 @@ public enum ErrorCode {
   // 요청 자체가 잘못된 경우임. 본문 JSON 이 깨졌거나 형식이 맞지 않음
   INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 형식이 올바르지 않습니다."),
 
+  // 필수 약관에 동의하지 않은 채로 가입을 시도한 경우임
+  // 화면에서는 "다음" 버튼이 막혀 있지만 그 버튼은 막는 장치가 아님.
+  // 개발자 도구로 지울 수 있고 API 를 직접 부르면 거치지도 않으므로 서버가 다시 확인함
+  TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "필수 약관에 동의해야 가입할 수 있습니다."),
+
   DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
   DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
 

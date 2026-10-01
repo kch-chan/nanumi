@@ -6,12 +6,17 @@ import type { TermsKey } from '../../../constants/terms';
 import { TERMS_DOCUMENTS, findTermsDocument } from '../../../constants/terms';
 import TermsDocumentView from './TermsDocumentView';
 
+type CheckedTerms = Partial<Record<TermsKey, boolean>>;
+
 interface StepTermsProps {
+  // 체크 상태는 SignupFunnel 이 들고 있음
+  // 여기서 useState 로 들고 있으면 단계를 옮길 때 언마운트되어 체크가 전부 풀림
+  checked: CheckedTerms;
+  onCheckedChange: (next: CheckedTerms) => void;
   onNext: () => void;
 }
 
-function StepTerms({ onNext }: StepTermsProps) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+function StepTerms({ checked, onCheckedChange, onNext }: StepTermsProps) {
   const [openTerm, setOpenTerm] = useState<TermsKey | null>(null);
 
   const allChecked = TERMS_DOCUMENTS.every((term) => checked[term.key]);
@@ -24,13 +29,15 @@ function StepTerms({ onNext }: StepTermsProps) {
 
   const toggleAll = () => {
     const next = !allChecked;
-    setChecked(
-      Object.fromEntries(TERMS_DOCUMENTS.map((term) => [term.key, next])),
+    onCheckedChange(
+      Object.fromEntries(
+        TERMS_DOCUMENTS.map((term) => [term.key, next]),
+      ) as CheckedTerms,
     );
   };
 
   const toggleOne = (key: TermsKey) =>
-    setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
+    onCheckedChange({ ...checked, [key]: !checked[key] });
 
   return (
     <div className="flex flex-col gap-6">

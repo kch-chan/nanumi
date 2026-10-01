@@ -6,6 +6,7 @@ import PasswordInput from '../../components/PasswordInput';
 import ApiTestPanel from './ApiTestPanel';
 import SessionTestPanel from './SessionTestPanel';
 import { login, signup } from '../../api/auth';
+import { toAgreementPayload } from '../../constants/terms';
 import type { LoginRequest, SignupRequest } from '../../types/auth';
 
 const VARIANTS = [
@@ -73,7 +74,18 @@ function Test() {
             { name: 'dong', label: '동', placeholder: '101' },
             { name: 'ho', label: '호', placeholder: '1203' },
           ]}
-          request={(payload) => signup(payload as unknown as SignupRequest)}
+          // 서버가 필수 약관 동의를 확인하므로 확인용 패널에서도 함께 보내야 함
+          // 안 보내면 입력을 제대로 채워도 400(TERMS_NOT_AGREED)만 돌아옴
+          request={(payload) =>
+            signup({
+              ...(payload as unknown as Omit<SignupRequest, 'agreements'>),
+              agreements: toAgreementPayload({
+                service: true,
+                privacy: true,
+                marketing: false,
+              }),
+            })
+          }
         />
 
         <ApiTestPanel

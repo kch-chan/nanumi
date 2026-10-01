@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { TermsKey } from '../../../constants/terms';
 import StepComplete from './StepComplete';
 import StepInfo from './StepInfo';
 import StepTerms from './StepTerms';
@@ -14,6 +15,16 @@ const STEPS: { key: Step; label: string }[] = [
 function SignupFunnel() {
   const [step, setStep] = useState<Step>('terms');
   const [nickname, setNickname] = useState('');
+
+  // 약관 체크 상태를 퍼널이 들고 있음
+  //
+  // 전에는 StepTerms 안에 있었는데, 단계를 바꾸면 그 컴포넌트가 언마운트되어 상태가 사라졌음.
+  // "다음" 뒤에 "이전" 을 누르면 체크가 전부 풀려서 다시 체크해야 했음
+  //
+  // 가입 요청에 동의 기록을 담아 보내야 하므로 StepInfo 도 이 값을 알아야 함
+  const [checkedTerms, setCheckedTerms] = useState<
+    Partial<Record<TermsKey, boolean>>
+  >({});
 
   const currentIndex = STEPS.findIndex((s) => s.key === step);
 
@@ -42,9 +53,16 @@ function SignupFunnel() {
         })}
       </ol>
 
-      {step === 'terms' && <StepTerms onNext={() => setStep('info')} />}
+      {step === 'terms' && (
+        <StepTerms
+          checked={checkedTerms}
+          onCheckedChange={setCheckedTerms}
+          onNext={() => setStep('info')}
+        />
+      )}
       {step === 'info' && (
         <StepInfo
+          checkedTerms={checkedTerms}
           onPrev={() => setStep('terms')}
           onComplete={(name) => {
             setNickname(name);

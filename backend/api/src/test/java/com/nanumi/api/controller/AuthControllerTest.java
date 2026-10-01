@@ -72,7 +72,12 @@ class AuthControllerTest {
         "nickname": "나눔이",
         "aptName": "행복아파트",
         "dong": "101",
-        "ho": "1502"
+        "ho": "1502",
+        "agreements": [
+          { "key": "service",   "version": "시행일자 2026년 8월", "agreed": true  },
+          { "key": "privacy",   "version": "시행일자 2026년 8월", "agreed": true  },
+          { "key": "marketing", "version": "시행일자 2026년 8월", "agreed": false }
+        ]
       }
       """;
 
@@ -103,6 +108,41 @@ class AuthControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.message").isNotEmpty());
+
+    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
+  }
+
+  // 약관 동의 목록이 아예 없으면 컨트롤러에서 막혀야 함
+  // 서버가 동의 여부를 검사하는 것과 별개로, 칸 자체가 빠진 요청은 형식 오류임
+  @Test
+  @DisplayName("약관 동의 목록이 없으면 400 을 돌려주고 서비스는 부르지 않음")
+  void 회원가입_약관_누락() throws Exception {
+    String body =
+        """
+        {
+          "email": "nanumi@example.com",
+          "password": "Ab3!efgh",
+          "nickname": "나눔이",
+          "aptName": "행복아파트"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isBadRequest());
+
+    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
+  }
+
+  // 목록 안쪽 요소의 제약은 @Valid 가 있어야 검사됨
+  @Test
+  @DisplayName("약관 종류가 비어 있으면 400 을 돌려줌")
+  void 회원가입_약관_key_누락() throws Exception {
+    String body = SIGNUP_BODY.replace("\"key\": \"service\"", "\"key\": \"\"");
+
+    mockMvc
+        .perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isBadRequest());
 
     verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
   }
