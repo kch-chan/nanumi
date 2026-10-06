@@ -26,11 +26,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.EnumMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -65,7 +63,7 @@ public class AuthService {
     this.dummyPasswordHash = nanumiPasswordEncoder.encode(UUID.randomUUID().toString());
   }
 
-  public SignupResponse signup(SignupRequest request, String clientIp) {
+  public SignupResponse signup(SignupRequest request) {
 
     String email = normalizeEmail(request.email());
 
@@ -99,7 +97,7 @@ public class AuthService {
     return SignupResponse.of(UserResponse.from(user));
   }
 
-  public LoginResponse login(LoginRequest request, String clientIp) {
+  public LoginResponse login(LoginRequest request) {
     String email = normalizeEmail(request.email());
 
     Account account = accountRepository.findByEmail(email).orElse(null);

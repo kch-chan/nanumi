@@ -41,15 +41,8 @@ class RequestDtoTest {
     return violations.stream().map(ConstraintViolation::getMessage).toList();
   }
 
-  private static List<TermsAgreementRequest> agreements() {
-    return List.of(
-        new TermsAgreementRequest("service", "시행일자 2026년 8월", true),
-        new TermsAgreementRequest("privacy", "시행일자 2026년 8월", true),
-        new TermsAgreementRequest("marketing", "시행일자 2026년 8월", false));
-  }
-
   private static SignupRequest signup(String email, String password, String nickname) {
-    return new SignupRequest(email, password, nickname, "행복아파트", "101", "1502", agreements());
+    return new SignupRequest(email, password, nickname, "행복아파트", "101", "1502");
   }
 
   @Nested
@@ -66,8 +59,7 @@ class RequestDtoTest {
     @DisplayName("동·호는 비워도 통과함")
     void 선택_항목() {
       SignupRequest request =
-          new SignupRequest(
-              "nanumi@example.com", "Ab3!efgh", "나눔이", "행복아파트", null, null, agreements());
+          new SignupRequest("nanumi@example.com", "Ab3!efgh", "나눔이", "행복아파트", null, null);
 
       assertThat(messages(request)).isEmpty();
     }
@@ -98,8 +90,7 @@ class RequestDtoTest {
     @DisplayName("자유 입력 칸에 태그가 들어오면 거절함")
     void 태그_거절() {
       SignupRequest request =
-          new SignupRequest(
-              "nanumi@example.com", "Ab3!efgh", "나눔이", "<script>행복아파트", null, null, agreements());
+          new SignupRequest("nanumi@example.com", "Ab3!efgh", "나눔이", "<script>행복아파트", null, null);
 
       assertThat(messages(request)).contains("HTML 태그는 사용할 수 없습니다.");
     }
@@ -108,8 +99,7 @@ class RequestDtoTest {
     @DisplayName("아파트명이 비면 알려 줌")
     void 아파트명_필수() {
       SignupRequest request =
-          new SignupRequest(
-              "nanumi@example.com", "Ab3!efgh", "나눔이", "  ", null, null, agreements());
+          new SignupRequest("nanumi@example.com", "Ab3!efgh", "나눔이", "  ", null, null);
 
       assertThat(messages(request)).contains("아파트명을 입력해 주세요.");
     }
@@ -119,79 +109,9 @@ class RequestDtoTest {
     void 동호_길이() {
       SignupRequest request =
           new SignupRequest(
-              "nanumi@example.com",
-              "Ab3!efgh",
-              "나눔이",
-              "행복아파트",
-              "1".repeat(21),
-              "2".repeat(21),
-              agreements());
+              "nanumi@example.com", "Ab3!efgh", "나눔이", "행복아파트", "1".repeat(21), "2".repeat(21));
 
       assertThat(messages(request)).contains("동은 20자 이하여야 합니다.", "호는 20자 이하여야 합니다.");
-    }
-
-    // 동의를 받았다는 사실의 입증 책임이 사업자에게 있어 목록 자체를 필수로 둠
-    @Test
-    @DisplayName("약관 동의 목록이 비면 알려 줌")
-    void 약관_목록_필수() {
-      SignupRequest request =
-          new SignupRequest(
-              "nanumi@example.com", "Ab3!efgh", "나눔이", "행복아파트", null, null, List.of());
-
-      assertThat(messages(request)).contains("약관 동의 정보가 필요합니다.");
-    }
-
-    // @Valid 가 붙어 있어야 목록 안쪽 요소의 제약까지 검사됨
-    // 빠뜨리면 key 가 비어 있어도 그대로 통과해서 빈 문자열이 DB 로 들어감
-    @Test
-    @DisplayName("목록 안쪽 항목의 제약까지 검사함")
-    void 약관_요소_검사() {
-      SignupRequest request =
-          new SignupRequest(
-              "nanumi@example.com",
-              "Ab3!efgh",
-              "나눔이",
-              "행복아파트",
-              null,
-              null,
-              List.of(new TermsAgreementRequest("  ", "", true)));
-
-      assertThat(messages(request)).contains("약관 종류가 필요합니다.", "약관 판이 필요합니다.");
-    }
-  }
-
-  @Nested
-  @DisplayName("약관 동의 항목")
-  class TermsAgreementRequestTest {
-
-    @Test
-    @DisplayName("올바른 값은 통과함")
-    void 정상() {
-      assertThat(messages(new TermsAgreementRequest("service", "시행일자 2026년 8월", true))).isEmpty();
-    }
-
-    @Test
-    @DisplayName("약관 종류가 20자를 넘으면 알려 줌")
-    void 종류_길이() {
-      assertThat(messages(new TermsAgreementRequest("s".repeat(21), "2026-08", true)))
-          .contains("약관 종류가 올바르지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("약관 판이 40자를 넘으면 알려 줌")
-    void 판_길이() {
-      assertThat(messages(new TermsAgreementRequest("service", "v".repeat(41), true)))
-          .contains("약관 판이 올바르지 않습니다.");
-    }
-
-    // agreed 를 원시 boolean 으로 두면 null 이 조용히 false 가 되어
-    // "안 보냄" 과 "거부" 를 구분할 수 없음. 그래서 래퍼 타입으로 받고 여기서 판정함
-    @Test
-    @DisplayName("동의 여부를 안 보내면 동의하지 않은 것으로 봄")
-    void 동의_생략() {
-      assertThat(new TermsAgreementRequest("marketing", "2026-08", null).isAgreed()).isFalse();
-      assertThat(new TermsAgreementRequest("marketing", "2026-08", false).isAgreed()).isFalse();
-      assertThat(new TermsAgreementRequest("marketing", "2026-08", true).isAgreed()).isTrue();
     }
   }
 

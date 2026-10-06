@@ -7,7 +7,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.http.HttpStatus;
 
 @DisplayName("오류 코드")
 class ErrorCodeTest {
@@ -22,7 +21,6 @@ class ErrorCodeTest {
     "ACCESS_DENIED, 403",
     "WITHDRAWN_USER, 403",
     "USER_NOT_FOUND, 404",
-    "LOGIN_ATTEMPT_EXCEEDED, 429",
     "INTERNAL_ERROR, 500",
   })
   @DisplayName("정해 둔 상태 코드를 가짐")
@@ -56,14 +54,5 @@ class ErrorCodeTest {
   void 성공_코드는_없음() {
     assertThat(Arrays.stream(ErrorCode.values()).map(ErrorCode::getStatus))
         .allSatisfy(status -> assertThat(status.isError()).isTrue());
-  }
-
-  @Test
-  @DisplayName("잠금 안내에 남은 시간을 적지 않음")
-  void 잠금_안내() {
-    assertThat(ErrorCode.LOGIN_ATTEMPT_EXCEEDED.getStatus())
-        .isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-    // 남은 시간을 알려 주면 잠금이 언제 풀리는지 맞춰서 다시 시도할 수 있게 됨
-    assertThat(ErrorCode.LOGIN_ATTEMPT_EXCEEDED.getMessage()).doesNotContainPattern("[0-9]");
   }
 }

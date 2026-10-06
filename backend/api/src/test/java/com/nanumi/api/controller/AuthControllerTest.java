@@ -2,8 +2,6 @@ package com.nanumi.api.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,15 +19,12 @@ import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.exception.GlobalExceptionHandler;
-import com.nanumi.api.security.ClientIpResolver;
 import com.nanumi.api.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -46,20 +41,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AuthControllerTest {
 
   @Mock private AuthService authService;
-  @Mock private ClientIpResolver clientIpResolver;
 
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUp() {
-    // 어느 값을 접속자 IP 로 볼지는 ClientIpResolver 의 일이고 그쪽에서 따로 확인함.
-    // 여기서는 "컨트롤러가 그 값을 서비스로 넘기는지" 만 보면 되므로 연결 주소를 그대로 돌려줌
-    when(clientIpResolver.resolve(any()))
-        .thenAnswer(
-            invocation -> invocation.getArgument(0, HttpServletRequest.class).getRemoteAddr());
-
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new AuthController(authService, clientIpResolver))
+        MockMvcBuilders.standaloneSetup(new AuthController(authService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }
@@ -72,12 +60,7 @@ class AuthControllerTest {
         "nickname": "나눔이",
         "aptName": "행복아파트",
         "dong": "101",
-        "ho": "1502",
-        "agreements": [
-          { "key": "service",   "version": "시행일자 2026년 8월", "agreed": true  },
-          { "key": "privacy",   "version": "시행일자 2026년 8월", "agreed": true  },
-          { "key": "marketing", "version": "시행일자 2026년 8월", "agreed": false }
-        ]
+        "ho": "1502"
       }
       """;
 
@@ -88,7 +71,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("회원가입에 성공하면 201 을 돌려줌")
   void 회원가입_성공() throws Exception {
-    when(authService.signup(any(), anyString())).thenReturn(SignupResponse.of(user()));
+    when(authService.signup(any())).thenReturn(SignupResponse.of(user()));
 
     mockMvc
         .perform(
@@ -109,49 +92,13 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.message").isNotEmpty());
 
-    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
-  }
-
-  // 약관 동의 목록이 아예 없으면 컨트롤러에서 막혀야 함
-  // 서버가 동의 여부를 검사하는 것과 별개로, 칸 자체가 빠진 요청은 형식 오류임
-  @Test
-  @DisplayName("약관 동의 목록이 없으면 400 을 돌려주고 서비스는 부르지 않음")
-  void 회원가입_약관_누락() throws Exception {
-    String body =
-        """
-        {
-          "email": "nanumi@example.com",
-          "password": "Ab3!efgh",
-          "nickname": "나눔이",
-          "aptName": "행복아파트"
-        }
-        """;
-
-    mockMvc
-        .perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
-        .andExpect(status().isBadRequest());
-
-    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
-  }
-
-  // 목록 안쪽 요소의 제약은 @Valid 가 있어야 검사됨
-  @Test
-  @DisplayName("약관 종류가 비어 있으면 400 을 돌려줌")
-  void 회원가입_약관_key_누락() throws Exception {
-    String body = SIGNUP_BODY.replace("\"key\": \"service\"", "\"key\": \"\"");
-
-    mockMvc
-        .perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
-        .andExpect(status().isBadRequest());
-
-    verify(authService, org.mockito.Mockito.never()).signup(any(), anyString());
+    verify(authService, org.mockito.Mockito.never()).signup(any());
   }
 
   @Test
   @DisplayName("이메일이 겹치면 409 로 나감")
   void 회원가입_중복() throws Exception {
-    when(authService.signup(any(), anyString()))
-        .thenThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL));
+    when(authService.signup(any())).thenThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL));
 
     mockMvc
         .perform(
@@ -163,7 +110,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("로그인에 성공하면 토큰 두 개를 돌려줌")
   void 로그인_성공() throws Exception {
-    when(authService.login(any(), anyString()))
+    when(authService.login(any()))
         .thenReturn(LoginResponse.of("access-token", "refresh-token", user()));
 
     mockMvc
@@ -176,32 +123,10 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
   }
 
-  // 실패 횟수를 이메일과 접속 IP 로 따로 세기 때문에 IP 를 같이 넘겨야 함
-  @Test
-  @DisplayName("로그인할 때 접속 IP 를 함께 넘김")
-  void 로그인_IP_전달() throws Exception {
-    when(authService.login(any(), anyString())).thenReturn(LoginResponse.of("a", "r", user()));
-
-    mockMvc.perform(
-        post("/api/auth/login")
-            .with(
-                request -> {
-                  request.setRemoteAddr("203.0.113.7");
-                  return request;
-                })
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"nanumi@example.com\",\"password\":\"Ab3!efgh\"}"));
-
-    ArgumentCaptor<String> ip = ArgumentCaptor.forClass(String.class);
-    verify(authService).login(any(LoginRequest.class), ip.capture());
-    org.assertj.core.api.Assertions.assertThat(ip.getValue()).isEqualTo("203.0.113.7");
-  }
-
   @Test
   @DisplayName("비밀번호가 틀리면 401 로 나감")
   void 로그인_실패() throws Exception {
-    when(authService.login(any(), anyString()))
-        .thenThrow(new CustomException(ErrorCode.INVALID_CREDENTIALS));
+    when(authService.login(any())).thenThrow(new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
     mockMvc
         .perform(
@@ -210,20 +135,6 @@ class AuthControllerTest {
                 .content("{\"email\":\"nanumi@example.com\",\"password\":\"Ab3!efgh\"}"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.message").value("이메일 또는 비밀번호가 올바르지 않습니다."));
-  }
-
-  @Test
-  @DisplayName("잠긴 계정은 429 로 나감")
-  void 로그인_잠김() throws Exception {
-    when(authService.login(any(), anyString()))
-        .thenThrow(new CustomException(ErrorCode.LOGIN_ATTEMPT_EXCEEDED));
-
-    mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"nanumi@example.com\",\"password\":\"Ab3!efgh\"}"))
-        .andExpect(status().isTooManyRequests());
   }
 
   @Test
@@ -300,7 +211,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("로그인은 이메일 형식을 따지지 않음")
   void 로그인은_형식을_안_봄() throws Exception {
-    when(authService.login(any(), anyString())).thenReturn(LoginResponse.of("a", "r", user()));
+    when(authService.login(any())).thenReturn(LoginResponse.of("a", "r", user()));
 
     mockMvc
         .perform(
@@ -309,6 +220,6 @@ class AuthControllerTest {
                 .content("{\"email\":\"옛날계정\",\"password\":\"a\"}"))
         .andExpect(status().isOk());
 
-    verify(authService).login(any(), eq("127.0.0.1"));
+    verify(authService).login(any(LoginRequest.class));
   }
 }

@@ -2,44 +2,35 @@ package com.nanumi.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nanumi.api.dto.request.LoginRequest;
 import com.nanumi.api.dto.request.RefreshRequest;
 import com.nanumi.api.dto.request.SignupRequest;
-import com.nanumi.api.dto.request.TermsAgreementRequest;
 import com.nanumi.api.dto.request.WithdrawalRequest;
 import com.nanumi.api.dto.response.LoginResponse;
 import com.nanumi.api.dto.response.SignupResponse;
 import com.nanumi.api.dto.response.TokenResponse;
 import com.nanumi.api.entity.Account;
 import com.nanumi.api.entity.RefreshToken;
-import com.nanumi.api.entity.TermsAgreement;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.repository.AccountRepository;
 import com.nanumi.api.repository.RefreshTokenRepository;
-import com.nanumi.api.repository.TermsAgreementRepository;
 import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
-import com.nanumi.api.security.LoginAttemptService;
-import com.nanumi.api.security.SignupAttemptService;
 import com.nanumi.api.security.password.NanumiPasswordEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,21 +48,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 @DisplayName("인증 서비스")
 class AuthServiceTest {
 
-  private static final String CLIENT_IP = "127.0.0.1";
   private static final String RAW_PASSWORD = "Ab3!efgh";
   private static final String STORED_HASH = "$nanumi$1$100000$salt$hash";
-
-  // 프런트 constants/terms.ts 의 effectiveDate 가 그대로 올라옴
-  private static final String TERMS_VERSION = "시행일자 2026년 8월";
 
   @Mock private UserRepository userRepository;
   @Mock private AccountRepository accountRepository;
   @Mock private NanumiPasswordEncoder passwordEncoder;
   @Mock private JwtTokenProvider jwtTokenProvider;
-  @Mock private LoginAttemptService loginAttemptService;
-  @Mock private SignupAttemptService signupAttemptService;
   @Mock private RefreshTokenRepository refreshTokenRepository;
-  @Mock private TermsAgreementRepository termsAgreementRepository;
 
   private AuthService authService;
 
@@ -83,10 +67,7 @@ class AuthServiceTest {
             accountRepository,
             passwordEncoder,
             jwtTokenProvider,
-            loginAttemptService,
-            signupAttemptService,
-            refreshTokenRepository,
-            termsAgreementRepository);
+            refreshTokenRepository);
   }
 
   // 로그인 응답 시간을 맞추려고 서비스가 미리 만들어 두는 해시임. 필요한 테스트에서만 부름
@@ -129,20 +110,7 @@ class AuthServiceTest {
   class Signup {
 
     private SignupRequest request(String dong, String ho) {
-      return request(dong, ho, allAgreed());
-    }
-
-    private SignupRequest request(String dong, String ho, List<TermsAgreementRequest> agreements) {
-      return new SignupRequest(
-          "Nanumi@Example.com", RAW_PASSWORD, "나눔이", "행복아파트", dong, ho, agreements);
-    }
-
-    // 필수 둘에 동의하고 선택 하나는 거부한, 평범한 가입 화면의 결과임
-    private List<TermsAgreementRequest> allAgreed() {
-      return List.of(
-          new TermsAgreementRequest("service", TERMS_VERSION, true),
-          new TermsAgreementRequest("privacy", TERMS_VERSION, true),
-          new TermsAgreementRequest("marketing", TERMS_VERSION, false));
+      return new SignupRequest("Nanumi@Example.com", RAW_PASSWORD, "나눔이", "행복아파트", dong, ho);
     }
 
     @Test
@@ -150,7 +118,7 @@ class AuthServiceTest {
     void 이메일_중복() {
       when(accountRepository.existsByEmail("nanumi@example.com")).thenReturn(true);
 
-      assertThatThrownBy(() -> authService.signup(request("101", "1502"), CLIENT_IP))
+      assertThatThrownBy(() -> authService.signup(request("101", "1502")))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
@@ -164,7 +132,7 @@ class AuthServiceTest {
       when(accountRepository.existsByEmail(anyString())).thenReturn(false);
       when(userRepository.existsByNicknameIgnoreCase("나눔이")).thenReturn(true);
 
-      assertThatThrownBy(() -> authService.signup(request("101", "1502"), CLIENT_IP))
+      assertThatThrownBy(() -> authService.signup(request("101", "1502")))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.DUPLICATE_NICKNAME);
@@ -178,7 +146,7 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      authService.signup(request("101", "1502"), CLIENT_IP);
+      authService.signup(request("101", "1502"));
 
       ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
       verify(accountRepository).save(captor.capture());
@@ -193,7 +161,7 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      authService.signup(request("", "   "), CLIENT_IP);
+      authService.signup(request("", "   "));
 
       ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
       verify(userRepository).save(captor.capture());
@@ -208,121 +176,12 @@ class AuthServiceTest {
       when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
       when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
 
-      SignupResponse response = authService.signup(request("101", "1502"), CLIENT_IP);
+      SignupResponse response = authService.signup(request("101", "1502"));
 
       ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
       verify(accountRepository).save(captor.capture());
       assertThat(captor.getValue().getPassword()).isEqualTo(STORED_HASH);
       assertThat(response.user().nickname()).isEqualTo("나눔이");
-    }
-
-    // 화면의 "다음" 버튼 비활성화는 막는 장치가 아님. 서버가 다시 봐야 함
-    @Test
-    @DisplayName("필수 약관에 동의하지 않으면 가입을 막음")
-    void 필수_약관_미동의() {
-      List<TermsAgreementRequest> onlyMarketing =
-          List.of(new TermsAgreementRequest("marketing", TERMS_VERSION, true));
-
-      assertThatThrownBy(() -> authService.signup(request("101", "1502", onlyMarketing), CLIENT_IP))
-          .isInstanceOf(CustomException.class)
-          .extracting("errorCode")
-          .isEqualTo(ErrorCode.TERMS_NOT_AGREED);
-
-      verify(userRepository, never()).save(any());
-      verify(termsAgreementRepository, never()).save(any());
-    }
-
-    // 필수 약관을 보내기는 했지만 agreed = false 인 경우임
-    @Test
-    @DisplayName("필수 약관을 거부로 보내도 가입을 막음")
-    void 필수_약관_거부() {
-      List<TermsAgreementRequest> refused =
-          List.of(
-              new TermsAgreementRequest("service", TERMS_VERSION, true),
-              new TermsAgreementRequest("privacy", TERMS_VERSION, false));
-
-      assertThatThrownBy(() -> authService.signup(request("101", "1502", refused), CLIENT_IP))
-          .isInstanceOf(CustomException.class)
-          .extracting("errorCode")
-          .isEqualTo(ErrorCode.TERMS_NOT_AGREED);
-    }
-
-    // 동의 확인을 이메일 조회보다 앞에 둔 이유임
-    // 동의 없이 보낸 요청으로는 가입된 이메일인지 알아낼 수 없어야 함
-    @Test
-    @DisplayName("약관 동의가 없으면 이메일 중복 여부를 알려 주지 않음")
-    void 약관_확인이_중복_조회보다_먼저() {
-      List<TermsAgreementRequest> none = List.of();
-
-      assertThatThrownBy(() -> authService.signup(request("101", "1502", none), CLIENT_IP))
-          .isInstanceOf(CustomException.class)
-          .extracting("errorCode")
-          .isEqualTo(ErrorCode.TERMS_NOT_AGREED);
-
-      verify(accountRepository, never()).existsByEmail(anyString());
-    }
-
-    @Test
-    @DisplayName("동의 기록을 약관마다 한 줄씩 남김. 선택 약관의 거부도 남김")
-    void 동의_기록_저장() {
-      when(accountRepository.existsByEmail(anyString())).thenReturn(false);
-      when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
-      when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
-
-      authService.signup(request("101", "1502"), CLIENT_IP);
-
-      ArgumentCaptor<TermsAgreement> captor = ArgumentCaptor.forClass(TermsAgreement.class);
-      verify(termsAgreementRepository, times(3)).save(captor.capture());
-
-      assertThat(captor.getAllValues())
-          .extracting(TermsAgreement::getTermsKey, TermsAgreement::isAgreed)
-          .containsExactlyInAnyOrder(
-              tuple("service", true), tuple("privacy", true), tuple("marketing", false));
-
-      assertThat(captor.getAllValues())
-          .allSatisfy(
-              agreement -> {
-                assertThat(agreement.getTermsVersion()).isEqualTo(TERMS_VERSION);
-                assertThat(agreement.getAgreedAt()).isNotNull();
-              });
-    }
-
-    // 프런트가 약관을 추가하고 서버가 아직 모르는 상태에서 가입 전체가 막히면 안 됨
-    @Test
-    @DisplayName("서버가 모르는 약관 key 는 버리고 나머지는 처리함")
-    void 모르는_약관은_무시() {
-      when(accountRepository.existsByEmail(anyString())).thenReturn(false);
-      when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
-      when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
-
-      List<TermsAgreementRequest> withUnknown =
-          List.of(
-              new TermsAgreementRequest("service", TERMS_VERSION, true),
-              new TermsAgreementRequest("privacy", TERMS_VERSION, true),
-              new TermsAgreementRequest("아직-없는-약관", TERMS_VERSION, true));
-
-      authService.signup(request("101", "1502", withUnknown), CLIENT_IP);
-
-      ArgumentCaptor<TermsAgreement> captor = ArgumentCaptor.forClass(TermsAgreement.class);
-      verify(termsAgreementRepository, times(2)).save(captor.capture());
-      assertThat(captor.getAllValues())
-          .extracting(TermsAgreement::getTermsKey)
-          .containsExactlyInAnyOrder("service", "privacy");
-    }
-
-    // agreed 를 아예 안 보낸 경우임. Boolean 이라 null 로 들어옴
-    @Test
-    @DisplayName("agreed 를 빼고 보내면 동의하지 않은 것으로 봄")
-    void agreed_누락은_미동의() {
-      List<TermsAgreementRequest> missingFlag =
-          List.of(
-              new TermsAgreementRequest("service", TERMS_VERSION, null),
-              new TermsAgreementRequest("privacy", TERMS_VERSION, true));
-
-      assertThatThrownBy(() -> authService.signup(request("101", "1502", missingFlag), CLIENT_IP))
-          .isInstanceOf(CustomException.class)
-          .extracting("errorCode")
-          .isEqualTo(ErrorCode.TERMS_NOT_AGREED);
     }
   }
 
@@ -332,21 +191,6 @@ class AuthServiceTest {
 
     private final LoginRequest request = new LoginRequest("Nanumi@Example.com", RAW_PASSWORD);
 
-    @Test
-    @DisplayName("잠겨 있으면 비밀번호를 보기도 전에 끊음")
-    void 잠긴_계정() {
-      doThrow(new CustomException(ErrorCode.LOGIN_ATTEMPT_EXCEEDED))
-          .when(loginAttemptService)
-          .checkBlocked(anyString(), anyString());
-
-      assertThatThrownBy(() -> authService.login(request, CLIENT_IP))
-          .isInstanceOf(CustomException.class)
-          .extracting("errorCode")
-          .isEqualTo(ErrorCode.LOGIN_ATTEMPT_EXCEEDED);
-
-      verify(accountRepository, never()).findByEmail(anyString());
-    }
-
     // 계정이 없을 때 바로 돌려주면 응답이 눈에 띄게 빨라져서 가입 여부가 드러남
     @Test
     @DisplayName("계정이 없어도 해싱을 한 번 돌리고 같은 오류를 냄")
@@ -354,13 +198,12 @@ class AuthServiceTest {
       initDummyHash();
       when(accountRepository.findByEmail("nanumi@example.com")).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> authService.login(request, CLIENT_IP))
+      assertThatThrownBy(() -> authService.login(request))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
 
       verify(passwordEncoder).matches(RAW_PASSWORD, STORED_HASH);
-      verify(loginAttemptService).recordFailure("nanumi@example.com", CLIENT_IP);
     }
 
     @Test
@@ -370,13 +213,10 @@ class AuthServiceTest {
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(false);
 
-      assertThatThrownBy(() -> authService.login(request, CLIENT_IP))
+      assertThatThrownBy(() -> authService.login(request))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
-
-      verify(loginAttemptService).recordFailure("nanumi@example.com", CLIENT_IP);
-      verify(loginAttemptService, never()).recordSuccess(anyString(), anyString());
     }
 
     @Test
@@ -387,7 +227,7 @@ class AuthServiceTest {
       when(accountRepository.findByEmail(anyString())).thenReturn(Optional.of(accountOf(user)));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
 
-      assertThatThrownBy(() -> authService.login(request, CLIENT_IP))
+      assertThatThrownBy(() -> authService.login(request))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.WITHDRAWN_USER);
@@ -404,11 +244,10 @@ class AuthServiceTest {
       when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
-      LoginResponse response = authService.login(request, CLIENT_IP);
+      LoginResponse response = authService.login(request);
 
       assertThat(response.accessToken()).isEqualTo("access-token");
       assertThat(response.refreshToken()).isEqualTo("refresh-token");
-      verify(loginAttemptService).recordSuccess("nanumi@example.com", CLIENT_IP);
     }
 
     // DB 에는 토큰 원문이 아니라 SHA-256 해시만 담겨야 함
@@ -423,7 +262,7 @@ class AuthServiceTest {
       when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
-      authService.login(request, CLIENT_IP);
+      authService.login(request);
 
       ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
       verify(refreshTokenRepository).save(captor.capture());
@@ -446,7 +285,7 @@ class AuthServiceTest {
       when(jwtTokenProvider.createRefreshToken(1)).thenReturn("refresh-token");
       when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(1_209_600_000L);
 
-      authService.login(request, CLIENT_IP);
+      authService.login(request);
 
       assertThat(account.getPassword()).isEqualTo("$nanumi$1$210000$new$hash");
     }

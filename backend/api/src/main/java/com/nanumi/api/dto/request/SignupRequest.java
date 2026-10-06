@@ -19,5 +19,4 @@ public record SignupRequest(
     @NotBlank(message = "아파트명을 입력해 주세요.") @SafeText
         @Size(max = 100, message = "아파트명은 100자 이하여야 합니다.") String aptName,
     @SafeText @Size(max = 20, message = "동은 20자 이하여야 합니다.") String dong,
-    @SafeText @Size(max = 20, message = "호는 20자 이하여야 합니다.") String ho
-) {}
+    @SafeText @Size(max = 20, message = "호는 20자 이하여야 합니다.") String ho) {}
