@@ -3,7 +3,6 @@ package com.nanumi.api.service;
 import com.nanumi.api.dto.request.LoginRequest;
 import com.nanumi.api.dto.request.RefreshRequest;
 import com.nanumi.api.dto.request.SignupRequest;
-import com.nanumi.api.dto.request.TermsAgreementRequest;
 import com.nanumi.api.dto.request.WithdrawalRequest;
 import com.nanumi.api.dto.response.LoginResponse;
 import com.nanumi.api.dto.response.LogoutResponse;
@@ -13,18 +12,14 @@ import com.nanumi.api.dto.response.UserResponse;
 import com.nanumi.api.dto.response.WithdrawalResponse;
 import com.nanumi.api.entity.Account;
 import com.nanumi.api.entity.RefreshToken;
-import com.nanumi.api.entity.TermsAgreement;
 import com.nanumi.api.entity.User;
 import com.nanumi.api.exception.CustomException;
 import com.nanumi.api.exception.ErrorCode;
 import com.nanumi.api.repository.AccountRepository;
 import com.nanumi.api.repository.RefreshTokenRepository;
-import com.nanumi.api.repository.TermsAgreementRepository;
 import com.nanumi.api.repository.UserRepository;
 import com.nanumi.api.security.JwtTokenProvider;
 import com.nanumi.api.security.JwtTokenProvider.TokenType;
-import com.nanumi.api.security.LoginAttemptService;
-import com.nanumi.api.security.SignupAttemptService;
 import com.nanumi.api.security.password.NanumiPasswordEncoder;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -50,10 +45,7 @@ public class AuthService {
   private final AccountRepository accountRepository;
   private final NanumiPasswordEncoder nanumiPasswordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
-  private final LoginAttemptService loginAttemptService;
-  private final SignupAttemptService signupAttemptService;
   private final RefreshTokenRepository refreshTokenRepository;
-  private final TermsAgreementRepository termsAgreementRepository;
 
   // 한 계정이 동시에 유지할 수 있는 기기 수임
   // 상한이 없으면 로그인할 때마다 토큰 행이 하나씩 늘어나 끝없이 쌓임
@@ -74,15 +66,6 @@ public class AuthService {
   }
 
   public SignupResponse signup(SignupRequest request, String clientIp) {
-    // 가입 경로는 인증이 필요 없으므로 IP 단위로 횟수를 제한함
-    // 막지 않으면 계정을 대량으로 만들거나, 409 응답만 보고 가입된 이메일을 훑을 수 있음
-    signupAttemptService.checkBlocked(clientIp);
-    signupAttemptService.recordAttempt(clientIp);
-
-    // 필수 약관 동의를 먼저 확인함
-    // 화면의 "다음" 버튼 비활성화는 막는 장치가 아님(개발자 도구로 지울 수 있고 API 직접 호출은 거치지도 않음).
-    // 이메일·닉네임 조회보다 앞에 두어, 동의 없이 보낸 요청으로는 가입 여부를 알아낼 수 없게 함
-    Map<TermsAgreement.Type, TermsAgreementRequest> agreements = resolveAgreements(request);
 
     String email = normalizeEmail(request.email());
 
@@ -113,59 +96,11 @@ public class AuthService {
             .build();
     accountRepository.save(account);
 
-    saveAgreements(user, agreements);
-
     return SignupResponse.of(UserResponse.from(user));
-  }
-
-  // 보낸 동의 목록을 서버가 아는 약관으로 바꾸고, 필수 항목이 모두 동의됐는지 확인함
-  //
-  // 모르는 key 는 조용히 버림. 프런트가 약관을 추가하고 서버가 아직 모르는 상황에서
-  // 가입 전체가 막히면 배포 순서에 따라 서비스가 멈추기 때문임.
-  // 반대로 필수 약관이 빠지는 것은 막아야 하므로 그쪽만 예외를 던짐
-  private Map<TermsAgreement.Type, TermsAgreementRequest> resolveAgreements(SignupRequest request) {
-    Map<TermsAgreement.Type, TermsAgreementRequest> resolved =
-        new EnumMap<>(TermsAgreement.Type.class);
-
-    for (TermsAgreementRequest agreement : request.agreements()) {
-      TermsAgreement.Type.fromKey(agreement.key())
-          // 같은 약관을 두 번 보내면 뒤의 것으로 덮지 않고 앞의 것을 남김
-          .ifPresent(type -> resolved.putIfAbsent(type, agreement));
-    }
-
-    boolean allRequiredAgreed =
-        TermsAgreement.Type.required().stream()
-            .allMatch(type -> resolved.containsKey(type) && resolved.get(type).isAgreed());
-
-    if (!allRequiredAgreed) {
-      throw new CustomException(ErrorCode.TERMS_NOT_AGREED);
-    }
-
-    return resolved;
-  }
-
-  // 받은 동의를 한 줄씩 남김. 선택 약관을 거부한 것도 남김
-  private void saveAgreements(
-      User user, Map<TermsAgreement.Type, TermsAgreementRequest> agreements) {
-    LocalDateTime agreedAt = LocalDateTime.now();
-
-    agreements.forEach(
-        (type, agreement) ->
-            termsAgreementRepository.save(
-                TermsAgreement.builder()
-                    .user(user)
-                    .termsKey(type.getKey())
-                    .termsVersion(agreement.version())
-                    .agreed(agreement.isAgreed())
-                    .agreedAt(agreedAt)
-                    .build()));
   }
 
   public LoginResponse login(LoginRequest request, String clientIp) {
     String email = normalizeEmail(request.email());
-
-    // 막혀 있으면 비밀번호를 맞춰 보기 전에 끊음
-    loginAttemptService.checkBlocked(email, clientIp);
 
     Account account = accountRepository.findByEmail(email).orElse(null);
 
@@ -173,17 +108,12 @@ public class AuthService {
       // 여기서 바로 돌려주면 응답이 눈에 띄게 빨라져서 가입 여부가 드러남
       // 계정이 있을 때와 같은 만큼 해싱을 돌리고 똑같은 오류를 냄
       nanumiPasswordEncoder.matches(request.password(), dummyPasswordHash);
-      loginAttemptService.recordFailure(email, clientIp);
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 
     if (!nanumiPasswordEncoder.matches(request.password(), account.getPassword())) {
-      loginAttemptService.recordFailure(email, clientIp);
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
-
-    // 비밀번호는 맞았으므로 무차별 대입은 아님. 실패 기록을 지움
-    loginAttemptService.recordSuccess(email, clientIp);
 
     User user = account.getUser();
     if (user.isWithdrawn()) {
