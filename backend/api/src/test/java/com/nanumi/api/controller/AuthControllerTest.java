@@ -253,7 +253,7 @@ class AuthControllerTest {
   @Test
   @DisplayName("탈퇴는 200 과 탈퇴 시각을 돌려줌")
   void 탈퇴() throws Exception {
-    when(authService.withdraw(any(), any()))
+    when(authService.withdraw(any(), any(), any()))
         .thenReturn(WithdrawalResponse.of(LocalDateTime.of(2026, 1, 1, 0, 0)));
 
     mockMvc

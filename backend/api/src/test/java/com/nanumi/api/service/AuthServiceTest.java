@@ -602,10 +602,32 @@ class AuthServiceTest {
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(false);
 
-      assertThatThrownBy(() -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "사유")))
+      assertThatThrownBy(
+              () -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "사유"), CLIENT_IP))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+      // 탈퇴도 비밀번호를 확인하므로 실패를 세야 함. 안 세면 탈취한 토큰으로 무제한 대입이 됨
+      verify(loginAttemptService).recordFailure("nanumi@example.com", CLIENT_IP);
+    }
+
+    @Test
+    @DisplayName("탈퇴 시도가 막혀 있으면 비밀번호를 맞춰 보기 전에 끊음")
+    void 탈퇴_시도_제한() {
+      Account account = accountOf(userWithId(1));
+      when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
+      doThrow(new CustomException(ErrorCode.LOGIN_ATTEMPT_EXCEEDED))
+          .when(loginAttemptService)
+          .checkBlocked("nanumi@example.com", CLIENT_IP);
+
+      assertThatThrownBy(
+              () -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "사유"), CLIENT_IP))
+          .isInstanceOf(CustomException.class)
+          .extracting("errorCode")
+          .isEqualTo(ErrorCode.LOGIN_ATTEMPT_EXCEEDED);
+
+      verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
 
     @Test
@@ -616,7 +638,7 @@ class AuthServiceTest {
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(account));
       when(passwordEncoder.matches(RAW_PASSWORD, STORED_HASH)).thenReturn(true);
 
-      authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "이사 갑니다"));
+      authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, "이사 갑니다"), CLIENT_IP);
 
       assertThat(user.isWithdrawn()).isTrue();
       assertThat(user.getWithdrawalReason()).isEqualTo("이사 갑니다");
@@ -631,7 +653,8 @@ class AuthServiceTest {
       user.withdraw(null);
       when(accountRepository.findByUser_Id(1)).thenReturn(Optional.of(accountOf(user)));
 
-      assertThatThrownBy(() -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, null)))
+      assertThatThrownBy(
+              () -> authService.withdraw(1, new WithdrawalRequest(RAW_PASSWORD, null), CLIENT_IP))
           .isInstanceOf(CustomException.class)
           .extracting("errorCode")
           .isEqualTo(ErrorCode.WITHDRAWN_USER);

@@ -59,14 +59,18 @@ export interface WithdrawalResponse {
   withdrawnAt: string;
 }
 
+// 실패 응답임. 서버가 내려주는 칸은 이 둘뿐임
+// (backend ErrorResponse.java 는 record (int status, String message) 이고,
+//  SecurityConfig.writeError 가 필터 단계에서 쓰는 JSON 도 같은 두 칸임)
+//
+// 전에는 여기에 code / path / timestamp 가 선언돼 있었고 "화면에서 분기할 때는 code 를 봐야 함"
+// 이라고 적혀 있었는데, 서버가 보내지 않는 칸이라 읽으면 언제나 undefined 였음.
+// 상황별로 다르게 보여 줘야 하면 status(getErrorStatus)로 분기하거나,
+// 서버 ErrorResponse 에 code 를 먼저 추가해야 함
+// (docs/api-spec.md 의 "오류 응답" 과 ResponseDtoTest 도 두 칸으로 못 박아 두었으므로 함께 고쳐야 함)
 export interface ErrorResponse {
   status: number;
-  // 백엔드 ErrorCode 의 이름임(예: DUPLICATE_EMAIL, TERMS_NOT_AGREED)
-  // 문구는 바뀔 수 있지만 코드는 그대로이므로, 화면에서 분기할 때는 message 대신 이걸 봐야 함
-  code: string;
   message: string;
-  path?: string;
-  timestamp?: string;
 }
 
 export interface RefreshRequest {

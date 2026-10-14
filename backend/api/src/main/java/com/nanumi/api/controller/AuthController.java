@@ -61,10 +61,14 @@ public class AuthController {
         authService.logout(userId, request == null ? null : request.refreshToken()));
   }
 
+  // 탈퇴도 비밀번호를 다시 확인하므로 로그인과 같은 시도 제한을 걸음. 그래서 IP 를 같이 넘김
   @PostMapping("/withdrawal")
   public ResponseEntity<WithdrawalResponse> withdraw(
-      @AuthenticationPrincipal Integer userId, @Valid @RequestBody WithdrawalRequest request) {
-    return ResponseEntity.ok(authService.withdraw(userId, request));
+      @AuthenticationPrincipal Integer userId,
+      @Valid @RequestBody WithdrawalRequest request,
+      HttpServletRequest servletRequest) {
+    return ResponseEntity.ok(
+        authService.withdraw(userId, request, resolveClientIp(servletRequest)));
   }
 
   // 어느 값을 접속자 IP 로 볼지는 ClientIpResolver 가 정함

@@ -182,13 +182,16 @@ public class AuthService {
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 
-    // 비밀번호는 맞았으므로 무차별 대입은 아님. 실패 기록을 지움
-    loginAttemptService.recordSuccess(email, clientIp);
-
     User user = account.getUser();
     if (user.isWithdrawn()) {
       throw new CustomException(ErrorCode.WITHDRAWN_USER);
     }
+
+    // 비밀번호는 맞았으므로 무차별 대입은 아님. 실패 기록을 지움
+    //
+    // 탈퇴 확인보다 뒤에 두어야 함. 앞에 두면 비밀번호가 맞는 탈퇴 계정이 403 을 받을 때마다
+    // 자기 실패 기록을 지워서, 그 이메일은 아무리 두드려도 잠기지 않음
+    loginAttemptService.recordSuccess(email, clientIp);
 
     // 평문 비밀번호를 알 수 있는 자리는 여기뿐임
     // 예전 BCrypt 해시나 반복 횟수가 낮은 해시는 이 참에 새 파라미터로 다시 해싱해 둠
@@ -279,11 +282,20 @@ public class AuthService {
     return LogoutResponse.of();
   }
 
-  public WithdrawalResponse withdraw(Integer userId, WithdrawalRequest request) {
+  // 탈퇴는 비밀번호를 다시 확인하므로 로그인과 같은 시도 제한을 걸음
+  //
+  // 걸지 않으면 탈취한 액세스 토큰 하나로 비밀번호를 무제한 대입할 수 있음.
+  // 이 경로는 인증이 필요하지만, 액세스 토큰은 서버가 취소할 수 없어서 최대 15분간 유효하고
+  // 그 사이에 맞춰 보는 횟수에는 아무 제한이 없었음
+  public WithdrawalResponse withdraw(Integer userId, WithdrawalRequest request, String clientIp) {
     Account account =
         accountRepository
             .findByUser_Id(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // 로그인과 같은 열쇠(이메일·IP)로 세야 두 경로를 번갈아 두드리는 것도 함께 막힘
+    String email = account.getEmail();
+    loginAttemptService.checkBlocked(email, clientIp);
 
     User user = account.getUser();
     if (user.isWithdrawn()) {
@@ -291,8 +303,11 @@ public class AuthService {
     }
 
     if (!nanumiPasswordEncoder.matches(request.password(), account.getPassword())) {
+      loginAttemptService.recordFailure(email, clientIp);
       throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
+
+    loginAttemptService.recordSuccess(email, clientIp);
 
     // 탈퇴 사유는 개인정보 수집·이용 동의에 적어 둔 선택 항목이라 받은 값을 담아 둠
     user.withdraw(blankToNull(request.reason()));

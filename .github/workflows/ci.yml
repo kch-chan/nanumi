@@ -222,13 +222,16 @@ jobs:
       # --if-present 는 스크립트가 없으면 조용히 넘어감
       # 예전에는 grep '"lint"' package.json 으로 확인했는데, 그 문자열이
       # 의존성 이름 안에도 걸릴 수 있어서 패키지 매니저가 주는 기능으로 바꿈
+      #
+      # 플래그는 스크립트명 "앞"에 와야 함. pnpm 은 스크립트명 뒤의 인자를 스크립트로 넘기므로
+      # `pnpm run lint --if-present` 는 `eslint . --if-present` 가 되어 그 자리에서 실패함
       - name: React - Install & Lint
         if: matrix.project.type == 'node'
         working-directory: ${{ matrix.project.dir }}
         run: |
           pnpm install --frozen-lockfile
-          pnpm run lint --if-present
-          pnpm run test --if-present
+          pnpm run --if-present lint
+          pnpm run --if-present test
 
       # lint 와 test 는 타입 검사와 번들 생성까지 해 주지 않음.
       # build 가 빠져 있으면 tsc 프로젝트 참조가 깨졌거나 번들이 안 만들어지는 변경이
@@ -240,7 +243,7 @@ jobs:
           # 배포 빌드는 이 값이 없으면 일부러 죽게 해 뒀음(axiosInstance.ts).
           # 검사에서는 형태만 맞으면 되므로 진짜 주소일 필요가 없음
           VITE_API_BASE_URL: https://ci.invalid/api
-        run: pnpm run build --if-present
+        run: pnpm run --if-present build
 
       - name: Setup Java (Maven)
         if: matrix.project.type == 'maven'

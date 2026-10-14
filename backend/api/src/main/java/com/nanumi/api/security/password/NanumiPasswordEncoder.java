@@ -1,5 +1,7 @@
 package com.nanumi.api.security.password;
 
+import com.nanumi.api.entity.Account;
+import jakarta.annotation.PostConstruct;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -44,6 +46,51 @@ public class NanumiPasswordEncoder implements PasswordEncoder { // 스프링 시
 
   private final NanumiPasswordProperties properties;
   private final BCryptPasswordEncoder legacyEncoder = new BCryptPasswordEncoder();
+
+  // 지금 설정으로 만든 해시가 accounts.password 칸에 들어가는지 기동할 때 확인함
+  //
+  // 왜 필요한가: 저장 형식에 반복 횟수가 그대로 들어가므로 해시 길이가 그 자릿수만큼 늘어난다.
+  // 기본값 100000(6자리)이 정확히 83자로 칸을 꽉 채우고 있어서 위쪽 여유가 전혀 없다.
+  // PASSWORD_ITERATIONS 를 1000000(7자리)으로 올리면 84자가 되는데, 그건 "작업 강도를 올린다" 는
+  // 가장 자연스러운 대응이다. 그런데 그 상태로 뜨면 가입과 로그인 시 재해싱이 저장 단계에서
+  // 잘려 실패하고, 회원에게는 500 으로만 보인다. 그래서 값을 받는 자리에서 막는다
+  //
+  // 반복 횟수를 더 올려야 하면 마이그레이션으로 칸을 넓히고 Account.PASSWORD_LENGTH 를 함께 고쳐야 함
+  @PostConstruct
+  void capacityCheck() {
+    int iterations = resolveIterations();
+    int length = encodedLength(iterations);
+
+    if (length > Account.PASSWORD_LENGTH) {
+      throw new IllegalStateException(
+          "지금 설정으로 만드는 비밀번호 해시가 accounts.password 칸보다 김: "
+              + length
+              + "자 > "
+              + Account.PASSWORD_LENGTH
+              + "자 (nanumi.security.password.iterations = "
+              + iterations
+              + "). 반복 횟수를 줄이거나, 마이그레이션으로 칸을 넓히고 Account.PASSWORD_LENGTH 도 함께 고쳐야 함");
+    }
+  }
+
+  // "$nanumi$1$100000$<salt>$<hash>" 의 길이임
+  private static int encodedLength(int iterations) {
+    return 1
+        + PREFIX.length()
+        + 1
+        + String.valueOf(VERSION).length()
+        + 1
+        + String.valueOf(iterations).length()
+        + 1
+        + base64Length(SALT_BYTES)
+        + 1
+        + base64Length(HASH_BYTES);
+  }
+
+  // 패딩을 떼고 쓰므로 올림임 (16바이트 -> 22자, 32바이트 -> 43자)
+  private static int base64Length(int bytes) {
+    return (bytes * 8 + 5) / 6;
+  }
 
   @Override
   public String encode(CharSequence rawPassword) { // String 보다 넓은 타입

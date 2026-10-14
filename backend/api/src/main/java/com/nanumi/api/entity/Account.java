@@ -33,6 +33,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account {
 
+  // 비밀번호 해시 칸의 길이임
+  // NanumiPasswordEncoder 가 만드는 문자열이 이 길이를 넘지 않는지 기동할 때 확인함
+  // (반복 횟수가 7자리가 되면 84자가 되어 저장에 실패하므로)
+  public static final int PASSWORD_LENGTH = 83;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
@@ -46,7 +51,7 @@ public class Account {
 
   // NanumiPasswordEncoder 가 만드는 해시 길이에 맞춤
   // 접두사·버전·반복 횟수에 salt(22자)와 hash(43자)를 이어 붙여서 기본값 기준 83자
-  @Column(nullable = true, length = 83)
+  @Column(nullable = true, length = PASSWORD_LENGTH)
   private String password;
 
   @CreatedDate
