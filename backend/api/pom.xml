@@ -183,27 +183,25 @@
 				</executions>
 			</plugin>
 
-			<!-- Checkstyle (Google) -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.3.1</version>
-				<configuration>
-					<configLocation>google_checks.xml</configLocation>
-					<consoleOutput>true</consoleOutput>
-					<failsOnError>true</failsOnError>
-					<linkXRef>false</linkXRef>
-				</configuration>
-				<executions>
-					<execution>
-						<id>validate</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+			<!-- Checkstyle 을 뺐음. 자바 코드 검사는 아래 spotless 가 함
+			     (spotless 는 verify 에서 실제로 빌드를 실패시키는 검사임)
+
+			     왜 뺐는가:
+			     1) 붙여 둔 목적이 "코드 포맷팅" 이었는데 그건 spotless + google-java-format 이
+			        정규형으로 강제함. 역할이 겹침
+			     2) 그런데 막지 못하고 있었음. google_checks.xml 은 모든 검사를 severity=warning 으로
+			        보고하고, 플러그인의 violationSeverity 기본값은 error 임.
+			        그래서 경고가 108개 떠도 "You have 0 Checkstyle violations" 로 통과했음
+			        (failsOnError=true 는 "Checkstyle 자체가 터졌을 때" 를 뜻하고 규칙 위반과 무관함)
+			     3) 그 108개 중 100개가 MissingJavadocType/Method 임. 이 저장소는 Javadoc 대신
+			        한국어 설명 주석을 쓰는 쪽을 택했으므로 켜도 전부 끄게 될 항목임
+			     4) LineLength 7개는 전부 dto/request/ 인데, spotless 의 formatAnnotations 가
+			        애너테이션을 타입과 같은 줄로 붙이면서 만든 줄임. 두 도구가 서로 싸우고 있었음
+			     5) 남은 1개(VariableDeclarationUsageDistance, AuthService 의 agreements)는
+			        약관 확인을 이메일·닉네임 조회보다 앞에 두려고 일부러 띄운 것임.
+			        동의 없이 보낸 요청으로 가입 여부를 알아내지 못하게 하는 장치라 고칠 수 없음
+
+			     즉 의미 있게 켜려면 지적된 것을 거의 전부 억제해야 하고, 그러면 남는 검사가 없음 -->
 
 			<plugin>
           <groupId>com.diffplug.spotless</groupId>

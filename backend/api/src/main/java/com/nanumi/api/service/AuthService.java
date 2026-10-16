@@ -38,9 +38,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -145,20 +147,47 @@ public class AuthService {
   }
 
   // 받은 동의를 한 줄씩 남김. 선택 약관을 거부한 것도 남김
+  //
+  // 판(version)은 클라이언트가 보낸 값이 아니라 서버가 아는 값을 담음
+  //
+  // 왜: 이 표의 존재 이유가 동의 사실의 입증임(개인정보 보호법 제22조, 입증 책임은 사업자).
+  // 받은 값을 그대로 담으면 "회원이 8월판에 동의했다" 가 아니라
+  // "클라이언트가 8월판이라고 주장했다" 는 기록이 됨. API 를 직접 부르면 아무 문자열이나
+  // 넣을 수 있고, 프런트가 구버전으로 배포된 동안에는 전원이 조용히 틀린 판으로 기록됨.
+  // 증빙은 서버가 자기 입으로 말할 수 있는 값이어야 하므로 서버 값을 담음
+  //
+  // 다른 값이 왔을 때 거부하지 않는 이유: 모르는 key 를 버리는 것과 같은 판단임.
+  // 프런트가 새 판을 먼저 배포하면 가입 전체가 막히므로, 기록은 서버 값으로 하고
+  // 어긋났다는 사실만 로그에 남겨서 배포가 뒤집혔음을 알 수 있게 함
+  //
+  // 끝 그림은 약관 전문을 서버가 내려주는 것임. 지금은 전문이 프런트에만 있어서
+  // (frontend/src/constants/terms.ts) 서버가 "내가 이 판을 보여 줬다" 고 말할 근거가 판 문자열뿐임
   private void saveAgreements(
       User user, Map<TermsAgreement.Type, TermsAgreementRequest> agreements) {
     LocalDateTime agreedAt = LocalDateTime.now();
 
     agreements.forEach(
-        (type, agreement) ->
-            termsAgreementRepository.save(
-                TermsAgreement.builder()
-                    .user(user)
-                    .termsKey(type.getKey())
-                    .termsVersion(agreement.version())
-                    .agreed(agreement.isAgreed())
-                    .agreedAt(agreedAt)
-                    .build()));
+        (type, agreement) -> {
+          String version = type.getCurrentVersion();
+
+          if (!version.equals(agreement.version())) {
+            log.warn(
+                "약관 판이 서버와 다름. 보낸 값으로 기록하지 않고 서버 값으로 남김"
+                    + " (약관={}, 보낸 값={}, 서버 값={}). 프런트와 서버의 약관 판을 맞춰야 함",
+                type.getKey(),
+                agreement.version(),
+                version);
+          }
+
+          termsAgreementRepository.save(
+              TermsAgreement.builder()
+                  .user(user)
+                  .termsKey(type.getKey())
+                  .termsVersion(version)
+                  .agreed(agreement.isAgreed())
+                  .agreedAt(agreedAt)
+                  .build());
+        });
   }
 
   public LoginResponse login(LoginRequest request, String clientIp) {

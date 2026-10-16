@@ -449,8 +449,14 @@ export const REQUIRED_TERMS_KEYS: readonly TermsKey[] = TERMS_DOCUMENTS.filter(
 // 가입 요청에 담아 보낼 동의 목록을 만듦
 //
 // 선택 약관을 거부한 것도 담음. "물어봤고 거부했다" 는 사실 자체가 기록 대상임
-// version 에는 effectiveDate 를 그대로 넣음. 약관을 개정하면 이 값이 바뀌므로
-// 어느 판에 동의한 회원인지 서버에서 구분할 수 있음
+//
+// version 에는 effectiveDate 를 그대로 넣지만, DB 에 남는 값은 이것이 아니라
+// 서버가 아는 판임(backend TermsAgreement.CURRENT_VERSION).
+// 동의 기록은 입증 자료라서 서버가 자기 입으로 말할 수 있는 값이어야 하기 때문임
+//
+// 그래서 여기 effectiveDate 와 서버의 CURRENT_VERSION 은 같아야 함.
+// 개인정보 보유 기한처럼 양쪽에 같은 값이 있는 자리이고, 한쪽만 고치면 어긋남.
+// 어긋나면 가입은 그대로 되지만 서버가 경고 로그를 남김(AuthService.saveAgreements)
 export const toAgreementPayload = (
   checked: Partial<Record<TermsKey, boolean>>,
 ): { key: TermsKey; version: string; agreed: boolean }[] =>

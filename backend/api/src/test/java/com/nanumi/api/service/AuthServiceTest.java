@@ -287,6 +287,54 @@ class AuthServiceTest {
               });
     }
 
+    // 판은 클라이언트가 보낸 값이 아니라 서버가 아는 값으로 남겨야 함
+    //
+    // 받은 값을 그대로 담으면 "회원이 이 판에 동의했다" 가 아니라 "클라이언트가 그렇게 주장했다"
+    // 는 기록이 됨. API 를 직접 부르면 아무 문자열이나 넣을 수 있으므로 증빙이 되지 못함
+    @Test
+    @DisplayName("클라이언트가 보낸 약관 판은 무시하고 서버가 아는 판으로 기록함")
+    void 판은_서버_값으로_기록() {
+      when(accountRepository.existsByEmail(anyString())).thenReturn(false);
+      when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
+      when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
+
+      List<TermsAgreementRequest> spoofed =
+          List.of(
+              new TermsAgreementRequest("service", "아무거나", true),
+              new TermsAgreementRequest("privacy", "시행일자 1999년 1월", true));
+
+      authService.signup(request("101", "1502", spoofed), CLIENT_IP);
+
+      ArgumentCaptor<TermsAgreement> captor = ArgumentCaptor.forClass(TermsAgreement.class);
+      verify(termsAgreementRepository, times(2)).save(captor.capture());
+
+      assertThat(captor.getAllValues())
+          .extracting(TermsAgreement::getTermsVersion)
+          .containsOnly(TERMS_VERSION);
+    }
+
+    // 판이 어긋나도 가입은 되어야 함
+    //
+    // 모르는 key 를 버리는 것과 같은 판단임. 프런트가 새 판을 먼저 배포했을 때
+    // 가입 전체가 막히면 배포 순서에 따라 서비스가 멈춤. 어긋났다는 사실은 로그로 남김
+    @Test
+    @DisplayName("약관 판이 어긋나도 가입은 성공함")
+    void 판이_어긋나도_가입됨() {
+      when(accountRepository.existsByEmail(anyString())).thenReturn(false);
+      when(userRepository.existsByNicknameIgnoreCase(anyString())).thenReturn(false);
+      when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(STORED_HASH);
+
+      List<TermsAgreementRequest> newerFront =
+          List.of(
+              new TermsAgreementRequest("service", "시행일자 2027년 1월", true),
+              new TermsAgreementRequest("privacy", "시행일자 2027년 1월", true));
+
+      SignupResponse response = authService.signup(request("101", "1502", newerFront), CLIENT_IP);
+
+      assertThat(response.user().nickname()).isEqualTo("나눔이");
+      verify(termsAgreementRepository, times(2)).save(any());
+    }
+
     // 프런트가 약관을 추가하고 서버가 아직 모르는 상태에서 가입 전체가 막히면 안 됨
     @Test
     @DisplayName("서버가 모르는 약관 key 는 버리고 나머지는 처리함")
